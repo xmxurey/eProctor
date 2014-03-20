@@ -11,6 +11,10 @@ import java.net.*;
 
 public class UIMenu extends JFrame implements ActionListener {
 	
+	public static int screenWidth = (int)Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+	public static int screenHeight = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+	
+	
 	private JTabbedPane tabPane;
 	private JPanel tabManage, tabExam;
 	private JPanel pNorth, pNLeft, pNCenter, pNRight;
@@ -294,7 +298,7 @@ public class UIMenu extends JFrame implements ActionListener {
 						else{
 							UIInvigilator uiInvigilator = new UIInvigilator(user, client, examHall);
 							uiInvigilator.setTitle("Invigilator Exam");
-							uiInvigilator.setSize(800,600);
+							uiInvigilator.setSize(screenWidth,screenHeight);
 							uiInvigilator.setVisible(true);
 							uiInvigilator.setResizable(false);
 							
