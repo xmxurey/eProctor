@@ -93,7 +93,7 @@ public class ExamHallManager {
 	}
 	
 	public Socket connectExamHall(ExamHall examHall, User user){
-		String serverAddr = "172.22.76.34"; 	// server host name
+		String serverAddr = "172.22.105.24"; 	// server host name
 		int portNo = 2000;	     		// server port number
 		try {
 	  			// S1 - create a socket to connect to server          

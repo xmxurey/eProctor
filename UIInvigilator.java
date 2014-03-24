@@ -61,24 +61,18 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 		Container container = getContentPane();
 		
 		pCenter = new JPanel();
-		pCenter.setLayout(new GridLayout(2,3,100,150));
+		pCenter.setLayout(new GridLayout(2,3));
 		
 		student = new Screen[6];
 		for (int i=0; i<6; i++){
-			student[i] = new Screen();
+			student[i] = new Screen(5000+i);
 			pCenter.add(student[i]);
-//			new Thread(student[i]).start(); 
-//	        SwingUtilities.invokeLater(new Runnable(){ 
-//	            public void run() { 
-//	                setVisible(true); 
-//	            }});
+			new Thread(student[i]).start(); 
+	        SwingUtilities.invokeLater(new Runnable(){ 
+	            public void run() { 
+	                setVisible(true); 
+	            }});
 		} 
-
-		new Thread(student[0]).start(); 
-        SwingUtilities.invokeLater(new Runnable(){ 
-            public void run() { 
-                setVisible(true); 
-            }});
         
 		container.add(pCenter,BorderLayout.CENTER);
 	

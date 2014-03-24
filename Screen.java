@@ -15,13 +15,15 @@ class Screen extends JPanel implements Runnable {
 	 
     private static final long serialVersionUID = 1L; 
     private Image cimage; 
+    private Socket s;
+    private int port;
 
     public void run() { 
         ServerSocket ss = null; 
         try { 
-            ss = new ServerSocket(5000); 
+            ss = new ServerSocket(port); 
             while (true) { 
-                Socket s = null; 
+                s = null; 
                 try { 
                     s = ss.accept(); 
                     ZipInputStream zis = new ZipInputStream(s 
@@ -52,9 +54,20 @@ class Screen extends JPanel implements Runnable {
             } 
         } 
     } 
+    
+//    public void closeSocket(){
+//    	if (s != null) { 
+//            try { 
+//                s.close(); 
+//            } catch (IOException e) { 
+//                e.printStackTrace(); 
+//            } 
+//        } 
+//    }
 
-    public Screen() { 
+    public Screen(int port) { 
         super(); 
+        this.port = port;
         this.setLayout(null); 
     } 
 
