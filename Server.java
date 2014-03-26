@@ -7,6 +7,9 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
 import java.text.*;
+import java.nio.file.Files;
+
+
 import javax.swing.*;
 
 public class Server extends Thread{
@@ -22,8 +25,8 @@ public class Server extends Thread{
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
-	private final int FINISH = 4;
-	private final int ENDEVENTLOG = 5;
+	private final int FINISHALL = 4;
+	private final int FINISHTIMER = 5;
 	
 	
 	public Server(){
@@ -50,7 +53,15 @@ public class Server extends Thread{
 
 		}
     }
-	
+	private synchronized void endTimer(String e){
+		String examHallID = e;
+        for (Session s : ExamHallParticipantList) {
+            
+        	if(s.getExamHallID().equals(examHallID)){
+        		s.writeInt(FINISHTIMER);
+        	}
+        }
+	}
     private synchronized void broadcast(String examHallID) {
         for (Session s : ExamHallParticipantList) {
             
@@ -162,14 +173,34 @@ public class Server extends Thread{
 					}
 					else if(code == START){
 						startExam(getExamHallID());
+						startEventLog();
+						//update eventlog
 					}
-					else if(code == FINISH){
+					else if(code == FINISHALL){
 						//send list of students in examhall back to examhallManager
 						ArrayList participantList = new ArrayList();
 						participantList = getStudentExamList(getExamHallID());
+						
+						endTimer(examHallID);
+						endEventLog(participantList);
 						sendList(participantList);
 						
+						//transfer files from eProctor Server to NTU Server
+						//transfer eventlog
+						File eventLogSource = new File("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt");
+						File eventLogDest = new File("NTUServer/EventLog/ExamHall=" + examHallID+ ".txt");
+						transferFile(eventLogSource,eventLogDest);
+						/*
+						//transfer ExamAnswers
+						File examAnswerSource = new File("eProctorServer/ExamAnswer/ExamHall=" + examHallID+ ".txt");
+						File examAnswerDest = new File("NTUServer/ExamAnswer/ExamHall=" + examHallID+ ".txt");
+						sendEventLogFile(eventLogSource,eventLogDest);
 						
+						//transfer Recording
+						File examRecordingSource = new File("eProctorServer/ExamRecording/ExamHall=" + examHallID+ ".mov");
+						File examRecordingDest = new File("NTUServer/ExamRecording/ExamHall=" + examHallID+ ".mov");
+						sendEventLogFile(examRecordingSource,examRecordingDest);
+						*/
 					}
 				}
 				
@@ -181,6 +212,9 @@ public class Server extends Thread{
 	        	e.printStackTrace();
 	        }
 		}
+		/*
+		  Enter Exam
+		 */
 		//Connect to exam
 		public void connectExam(String examHallID, int userID, int isStudent){
 			try{
@@ -224,6 +258,9 @@ public class Server extends Thread{
 			}
 		}
 		
+		/*
+		  Communication during exam
+		 */
 		//send msg
 		public void sendMsg(String msg, String name){
 			try{
@@ -276,13 +313,34 @@ public class Server extends Thread{
 	        return true;
 	    }
 	
+		/*
+		  Start Exam
+		 */
+		//Update eventLog
+		private void startEventLog(){
+			try{
+				PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID + ".txt", true)));
+				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				Calendar cal = Calendar.getInstance();
+				
+				writer.println("ExamHallID = " + examHallID + " has officially started at "+cal.getTime()+".");
+				writer.close();
+			}
+			catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
+		
+		/*
+		  Finish Exam
+		 */
 		//send to invigilator participantList
 		private void sendList(ArrayList participantList){
 			try {
 	            DataOutputStream out = new DataOutputStream(client.getOutputStream());
 	            int userID=0;
 
-	            out.writeInt(FINISH);
+	            out.writeInt(FINISHALL);
             	out.writeUTF(examHallID);
             	out.writeInt(participantList.size());
             	
@@ -290,9 +348,6 @@ public class Server extends Thread{
 	            	userID = (int)participantList.get(i);
 	            	out.writeInt(userID);
 	            }
-
-            	out.writeInt(FINISH);
-            	out.writeInt(participantList.size());
 	        }
 			// if an error occurs, do not abort just inform the user
 	        catch (IOException e) {
@@ -300,6 +355,64 @@ public class Server extends Thread{
 	        }
 		}
 	
+		//update eventlog
+		private void endEventLog(ArrayList participantList){
+			try{
+				//update eventlog for students whole takable = 1
+				//check if user can enter examhall
+				String url = "jdbc:mysql://localhost:3306/";
+				String dbName = "cz2006?";
+				String driver = "com.mysql.jdbc.Driver";
+				String username = "user=root&";
+				String password = "password=pass";
+				
+				Class.forName(driver);
+		        Connection conn = DriverManager.getConnection(url+dbName+username+password);
+		        Statement st = conn.createStatement();
+		        
+		        int userID=0;
+		        
+		        PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID + ".txt", true)));
+		        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				Calendar cal = Calendar.getInstance();
+				
+		        for(int i=0;i<participantList.size();i++){
+	            	userID = (int)participantList.get(i);
+
+	            	ResultSet res = st.executeQuery("select user.name, moduleAttendance.takable from moduleAttendance inner join User on User.userID = moduleattendance.userID " +
+			    	        "WHERE moduleAttendance.userID='"+userID+"' and moduleAttendance.examHallID='"+examHallID+"'");
+		        	
+			        int takable=0;
+			        String name="";
+			        while(res.next()){
+			        	takable = res.getInt("takable");
+			        	name = res.getString("name");
+			        }
+			        
+			        if(takable==1){
+						writer.println(name+ " has finished exam at "+cal.getTime()+".");
+			        }
+					
+	            }
+		        
+				writer.println("ExamHallID = " + examHallID + " has officially ended at "+cal.getTime()+".");
+				writer.close();
+		        				
+			}
+			catch(IOException ex){
+				ex.printStackTrace();
+			}
+			catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
+		
+		//Send files to server
+		private void transferFile(File source, File dest)throws IOException{
+			Files.copy(source.toPath(), dest.toPath());
+		}
+		
+		
 	}
 	
 }

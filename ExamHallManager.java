@@ -16,7 +16,7 @@ public class ExamHallManager {
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
-	private final int FINISH = 4;
+	private final int FINISHALL = 4;
 	
 	//Connection
 	private DataInputStream in;
@@ -96,7 +96,7 @@ public class ExamHallManager {
 	}
 	
 	public Socket connectExamHall(ExamHall examHall, User user){
-		String serverAddr = "172.22.127.64"; 	// server host name
+		String serverAddr = "127.0.0.1"; 	// server host name
 		int portNo=2001;
 		//String serverAddr = "172.22.105.24"; 	// server host name
 		//int portNo = 2000;	     		// server port number
@@ -150,10 +150,10 @@ public class ExamHallManager {
 
 	//Methods for end of exam
 	//End student exam
-	public void getParticipantList(Socket c, ExamHall examHall){
+	public void finishExam(Socket c, ExamHall examHall){
 		try{
 			out = new DataOutputStream(c.getOutputStream());
-			out.writeInt(FINISH);
+			out.writeInt(FINISHALL);
 			
 		}
 		catch(IOException ex){
@@ -182,27 +182,4 @@ public class ExamHallManager {
         }
 	}
 
-	//update eventlog
-	public void endEventLog(Socket c, ExamHall examHall){
-		try{
-			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHall.getExamHallID() + ".txt", true)));
-			
-			//update eventlog for students whole takable = 1
-			//check if user can enter examhall
-			String url = "jdbc:mysql://localhost:3306/";
-			String dbName = "cz2006?";
-			String driver = "com.mysql.jdbc.Driver";
-			String username = "user=root&";
-			String password = "password=pass";
-			
-			
-			
-			//writer.println(name+ " has joined the examHall");
-			writer.close();
-			
-		}
-		catch(IOException ex){
-			ex.printStackTrace();
-		}
-	}
 }
