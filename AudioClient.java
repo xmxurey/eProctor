@@ -1,4 +1,4 @@
-package eProctor.Audio;
+package eProctor;
 
 import java.awt.Frame;
 import java.io.BufferedReader;
@@ -14,14 +14,14 @@ public class AudioClient extends Frame
     OutputStream out;
     BufferedReader br;
     BufferedWriter bw;
-    Capture cap;
+    AudioCapture cap;
     
     public AudioClient(int portNo)
     {
         try
         {
         	Socket cli=new Socket("172.22.71.183",portNo);
-            cap=new Capture(cli);
+            cap=new AudioCapture(cli);
             cap.start();
         }
         catch(Exception e)

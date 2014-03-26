@@ -1,4 +1,4 @@
-package eProctor.Audio;
+package eProctor;
 
 import java.awt.Frame;
 import java.io.BufferedReader;
@@ -40,32 +40,32 @@ public class AudioServer extends Frame
 	        {
 	        	serSock1=new ServerSocket(6001);
 	            cli1=serSock1.accept();
-	            Playback player1=new Playback(cli1);
+	            AudioPlayback player1=new AudioPlayback(cli1);
 	            player1.start();
 	            
 	            serSock2=new ServerSocket(6002);
 	            cli2=serSock2.accept();
-	            Playback player2=new Playback(cli2);
+	            AudioPlayback player2=new AudioPlayback(cli2);
 	            player2.start();
 	            
 	            serSock3=new ServerSocket(6003);
 	            cli3=serSock3.accept();
-	            Playback player3=new Playback(cli3);
+	            AudioPlayback player3=new AudioPlayback(cli3);
 	            player3.start();
 	            
 	            serSock4=new ServerSocket(6004);
 	            cli4=serSock4.accept();
-	            Playback player4=new Playback(cli4);
+	            AudioPlayback player4=new AudioPlayback(cli4);
 	            player4.start();
 	            
 	            serSock5=new ServerSocket(6005);
 	            cli5=serSock5.accept();
-	            Playback player5=new Playback(cli5);
+	            AudioPlayback player5=new AudioPlayback(cli5);
 	            player5.start();
 	            
 	            serSock6=new ServerSocket(6006);
 	            cli6=serSock6.accept();
-	            Playback player6=new Playback(cli6);
+	            AudioPlayback player6=new AudioPlayback(cli6);
 	            player6.start();
 	        }
 	        catch(Exception e)

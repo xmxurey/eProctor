@@ -54,16 +54,6 @@ class Screen extends JPanel implements Runnable {
             } 
         } 
     } 
-    
-//    public void closeSocket(){
-//    	if (s != null) { 
-//            try { 
-//                s.close(); 
-//            } catch (IOException e) { 
-//                e.printStackTrace(); 
-//            } 
-//        } 
-//    }
 
     public Screen(int port) { 
         super(); 

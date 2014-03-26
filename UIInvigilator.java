@@ -34,6 +34,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
+	private final int ENDTAKABLE = 4;
 	
 	//managers
 	private ExamHallManager examhallMgr = new ExamHallManager();
@@ -142,18 +143,18 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 					
 					if(start){
 						btnStartStop.setText("Finish");
-						btnStartStop.setEnabled(false);
+						//btnStartStop.setEnabled(false);
 						//start exam
 						out.writeInt(START);
 					}
 					
 				}
-				else{
+				else if ((btnStartStop.getText() == ("Finish"))){
 					//stop exam
 						//stop recording
 					
 						//set takeable to 0
-					
+						examhallMgr.endStudentTakable(client, examHall);
 						//send answers
 					
 				}

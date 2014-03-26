@@ -36,7 +36,8 @@ public class WebcamClient extends Thread {
         Socket socket = null; 
         while (true) { 
             try { 
-                socket = new Socket("172.27.121.157", 5000);
+                socket = new Socket("127.0.0.1", 5000);
+                //socket = new Socket("172.22.71.20", 5000);
                 BufferedImage image = robot.createScreenCapture(rectangle); 
                 
                 int width = image.getWidth();

@@ -7,9 +7,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
 import java.text.*;
+import javax.swing.*;
 
 public class Server extends Thread{
-	int port = 2000;  
+	int port = 2003;  
 	int connectors = 50;
 	Socket client;
 	DataInputStream in;
@@ -18,9 +19,11 @@ public class Server extends Thread{
 	ArrayList<Session> ExamHallParticipantList;
 	
 	//Communication Protocol
+	private final int ENDOP = -1;
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
+	private final int ENDTAKABLE = 4;
 	
 	
 	public Server(){
@@ -71,6 +74,7 @@ public class Server extends Thread{
         	}
         }
     }
+    //method to invoke all students to start exam
     private synchronized void startExam(String e) {
     	String examHallID = e;
         for (Session s : ExamHallParticipantList) {
@@ -80,7 +84,17 @@ public class Server extends Thread{
         	}
         }
     }
-    
+    //method to return list of students in a particular examhall
+    private synchronized void getStudentExamList(String e) {
+    	String examHallID = e;
+        for (Session s : ExamHallParticipantList) {
+        	if(s.getExamHallID().equals(examHallID)){
+        		s.writeInt(s.userID);
+        	}
+        }
+        
+        
+    }
 	public static void main(String[] args) {
 		Server server = new Server();
         server.start();
@@ -114,20 +128,20 @@ public class Server extends Thread{
 		
 		public void run(){
 			try{
-				DataInputStream  socketIn = new DataInputStream(client.getInputStream());
-				DataOutputStream socketOut = new DataOutputStream(client.getOutputStream());
+				DataInputStream  in = new DataInputStream(client.getInputStream());
+				DataOutputStream out = new DataOutputStream(client.getOutputStream());
 				
 				Class.forName(driver);
 		        Connection conn = DriverManager.getConnection(url+dbName+username+password);
 		        Statement st = conn.createStatement();
 				
 				while(true){
-					int code = socketIn.readInt();
+					int code = in.readInt();
 					
 					if(code == CONNECT){
-						examHallID = socketIn.readUTF();
-						userID = socketIn.readInt();
-						isStudent = socketIn.readInt();
+						examHallID = in.readUTF();
+						userID = in.readInt();
+						isStudent = in.readInt();
 						
 						System.out.println("examhallID=" + examHallID + " userID="+userID);
 						
@@ -165,7 +179,7 @@ public class Server extends Thread{
 						
 					}
 					else if (code == MSG){
-						String msg = socketIn.readUTF();
+						String msg = in.readUTF();
 						
 						//get userName
 						ResultSet res = st.executeQuery("SELECT user.Name from user where userID='" + userID + "'");
@@ -190,6 +204,11 @@ public class Server extends Thread{
 					}
 					else if(code == START){
 						startExam(getExamHallID());
+					}
+					else if(code == ENDTAKABLE){
+						//send list of students in examhall back to examhallManager
+						getStudentExamList(getExamHallID());
+						out.writeInt(ENDOP);
 					}
 				}
 				

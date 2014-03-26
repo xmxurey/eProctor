@@ -7,13 +7,16 @@ import java.util.*;
 import java.text.*;
 import java.io.*;
 import java.net.*;
+import javax.swing.*;
 
 public class ExamHallManager {
 	
 	//Communication Protocol
+	private final int ENDOP = -1;
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
+	private final int ENDTAKABLE = 4;
 	
 	//Connection
 	private DataInputStream in;
@@ -93,8 +96,10 @@ public class ExamHallManager {
 	}
 	
 	public Socket connectExamHall(ExamHall examHall, User user){
-		String serverAddr = "172.22.105.24"; 	// server host name
-		int portNo = 2000;	     		// server port number
+		String serverAddr = "172.22.74.138"; 	// server host name
+		int portNo=2003;
+		//String serverAddr = "172.22.105.24"; 	// server host name
+		//int portNo = 2000;	     		// server port number
 		try {
 	  			// S1 - create a socket to connect to server          
 			Socket con = new Socket(serverAddr, portNo);
@@ -141,5 +146,27 @@ public class ExamHallManager {
         
 		
 		return false;
+	}
+
+	//Methods for end of exam
+	//End student exam
+	public void endStudentTakable(Socket c, ExamHall examHall){
+		try{
+			out = new DataOutputStream(c.getOutputStream());
+			out.writeInt(ENDTAKABLE);
+			int i;
+
+			while((i=in.readInt()) != ENDOP){
+				//set student takable to 0
+				JOptionPane.showMessageDialog(null, 
+						"UserID="+i);
+				System.out.println("User ID="+i);
+			}
+			
+			
+		}
+		catch(IOException ex){
+			System.out.println("Error : Unable to get I/O for the connection");
+		}
 	}
 }
