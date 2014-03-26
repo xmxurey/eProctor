@@ -30,14 +30,12 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private JScrollPane downScrollPane;
 	
 	private Screen[] student;
-	private Audio[] audio;
 	//Communication Protocol
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
-	private final int FINISH = 4;
-	private final int ENDEVENTLOG = 5;
-
+	private final int FINISHALL = 4;
+	private final int FINISHTIMER = 5;
 	
 	//managers
 	private ExamHallManager examhallMgr = new ExamHallManager();
@@ -52,8 +50,9 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	}
 	public UIInvigilator(User u, Socket c, ExamHall e){
 		
+		//new WebcamServer();
+
 		//Start all socket connection
-		
 		client = c;
 		user = u;	
 		examHall = e;
@@ -67,12 +66,9 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 		pCenter.setLayout(new GridLayout(2,3));
 		
 		student = new Screen[6];
-		audio = new Audio[6];
 		for (int i=0; i<6; i++){
 			student[i] = new Screen(5000+i);
-			audio[i] = new Audio(6000+i);
 			pCenter.add(student[i]);
-			new Thread(audio[i]).start();
 			new Thread(student[i]).start(); 
 	        SwingUtilities.invokeLater(new Runnable(){ 
 	            public void run() { 
@@ -159,12 +155,10 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 						//stop recording
 					
 						//set takeable to 0
-						examhallMgr.getParticipantList(client, examHall);
+						examhallMgr.finishExam(client, examHall);
 						btnStartStop.setEnabled(false);
 						//send answers
 						
-						//Update EventLog
-						examhallMgr.endEventLog(client, examHall);
 					
 				}
 			}
@@ -178,6 +172,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 		try {
             DataInputStream in = new DataInputStream(client.getInputStream());
             int code=0;
+            Thread time = null;
             
             while (true) {
             	
@@ -194,7 +189,8 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
-                		(new Thread(new CountDown(delay))).start();
+                		time = new Thread(new CountDown(delay));
+                		time.start();
                 		
                 		//get exam paper
                 		
@@ -202,19 +198,23 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 		//start Recording
                 		
                 	}
-                	else if(code == FINISH){
+                	else if(code == FINISHALL){
                 		String examHallID = in.readUTF();
                 		int participantSize= in.readInt();
                 		
                 		int userID=0;
                 		for(int i=0;i<participantSize;i++){
                 			userID = in.readInt();
-                			System.out.println("Received="+userID);
+                			
                 			examhallMgr.endStudentTakable(userID, examHallID);
                 		}
 
                 	}
-                } catch (IOException e) {
+                	else if(code == FINISHTIMER){
+                		time.stop();
+                	}
+                } 
+                catch (IOException e) {
                     System.out.println(" Exception reading Streams: " + e);
                     break;
                 }
@@ -233,6 +233,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 		long HH;
 		long MM;
 		long SS;
+		boolean stop=false;
 		
 		public CountDown(long s){
 			sec = s;

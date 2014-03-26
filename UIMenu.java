@@ -390,6 +390,7 @@ public class UIMenu extends JFrame implements ActionListener {
 							uiInvigilator.setSize(screenWidth,screenHeight);
 							uiInvigilator.setVisible(true);
 							uiInvigilator.setResizable(false);
+							
 						}
 					}
 				}
