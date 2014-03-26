@@ -20,7 +20,8 @@ public class WebcamClient extends Thread {
    private Robot robot; 
    
 
-   public WebcamClient() { 
+   public WebcamClient() {
+	   
        screenSize = Toolkit.getDefaultToolkit().getScreenSize(); 
        rectangle = new Rectangle(screenSize); 
        try { 

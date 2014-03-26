@@ -7,16 +7,16 @@ import java.util.*;
 import java.text.*;
 import java.io.*;
 import java.net.*;
+
 import javax.swing.*;
 
 public class ExamHallManager {
 	
 	//Communication Protocol
-	private final int ENDOP = -1;
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
-	private final int ENDTAKABLE = 4;
+	private final int FINISH = 4;
 	
 	//Connection
 	private DataInputStream in;
@@ -96,8 +96,8 @@ public class ExamHallManager {
 	}
 	
 	public Socket connectExamHall(ExamHall examHall, User user){
-		String serverAddr = "172.22.74.138"; 	// server host name
-		int portNo=2003;
+		String serverAddr = "172.22.127.64"; 	// server host name
+		int portNo=2001;
 		//String serverAddr = "172.22.105.24"; 	// server host name
 		//int portNo = 2000;	     		// server port number
 		try {
@@ -150,23 +150,59 @@ public class ExamHallManager {
 
 	//Methods for end of exam
 	//End student exam
-	public void endStudentTakable(Socket c, ExamHall examHall){
+	public void getParticipantList(Socket c, ExamHall examHall){
 		try{
 			out = new DataOutputStream(c.getOutputStream());
-			out.writeInt(ENDTAKABLE);
-			int i;
-
-			while((i=in.readInt()) != ENDOP){
-				//set student takable to 0
-				JOptionPane.showMessageDialog(null, 
-						"UserID="+i);
-				System.out.println("User ID="+i);
-			}
-			
+			out.writeInt(FINISH);
 			
 		}
 		catch(IOException ex){
 			System.out.println("Error : Unable to get I/O for the connection");
+		}
+	}
+	public void endStudentTakable(int userID, String examHallID){
+		String url = "jdbc:mysql://localhost:3306/";
+        String dbName = "cz2006?";
+        String driver = "com.mysql.jdbc.Driver";
+        String username = "user=root&";
+        String password = "password=pass";
+        
+        try {
+        	Class.forName(driver);
+	        Connection conn = DriverManager.getConnection(url+dbName+username+password);
+	        Statement st = conn.createStatement();
+	        
+	        //check if user is authorised.
+	        st.execute("UPDATE ModuleAttendance " + 
+			        "SET takable='0' " + 
+			        "WHERE UserID='"+userID+"' and examHallID='"+examHallID+"' ");
+        }
+        catch(Exception ex){
+        	ex.printStackTrace();
+        }
+	}
+
+	//update eventlog
+	public void endEventLog(Socket c, ExamHall examHall){
+		try{
+			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHall.getExamHallID() + ".txt", true)));
+			
+			//update eventlog for students whole takable = 1
+			//check if user can enter examhall
+			String url = "jdbc:mysql://localhost:3306/";
+			String dbName = "cz2006?";
+			String driver = "com.mysql.jdbc.Driver";
+			String username = "user=root&";
+			String password = "password=pass";
+			
+			
+			
+			//writer.println(name+ " has joined the examHall");
+			writer.close();
+			
+		}
+		catch(IOException ex){
+			ex.printStackTrace();
 		}
 	}
 }

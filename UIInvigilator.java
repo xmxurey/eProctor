@@ -30,11 +30,14 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private JScrollPane downScrollPane;
 	
 	private Screen[] student;
+	private Audio[] audio;
 	//Communication Protocol
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
-	private final int ENDTAKABLE = 4;
+	private final int FINISH = 4;
+	private final int ENDEVENTLOG = 5;
+
 	
 	//managers
 	private ExamHallManager examhallMgr = new ExamHallManager();
@@ -49,9 +52,8 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	}
 	public UIInvigilator(User u, Socket c, ExamHall e){
 		
-		//new WebcamServer();
-
 		//Start all socket connection
+		
 		client = c;
 		user = u;	
 		examHall = e;
@@ -65,9 +67,12 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 		pCenter.setLayout(new GridLayout(2,3));
 		
 		student = new Screen[6];
+		audio = new Audio[6];
 		for (int i=0; i<6; i++){
 			student[i] = new Screen(5000+i);
+			audio[i] = new Audio(6000+i);
 			pCenter.add(student[i]);
+			new Thread(audio[i]).start();
 			new Thread(student[i]).start(); 
 	        SwingUtilities.invokeLater(new Runnable(){ 
 	            public void run() { 
@@ -154,8 +159,12 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 						//stop recording
 					
 						//set takeable to 0
-						examhallMgr.endStudentTakable(client, examHall);
+						examhallMgr.getParticipantList(client, examHall);
+						btnStartStop.setEnabled(false);
 						//send answers
+						
+						//Update EventLog
+						examhallMgr.endEventLog(client, examHall);
 					
 				}
 			}
@@ -168,10 +177,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	public void run() {
 		try {
             DataInputStream in = new DataInputStream(client.getInputStream());
-
-            System.out.println("New Session Started");
             int code=0;
-            
             
             while (true) {
             	
@@ -195,6 +201,18 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 		
                 		//start Recording
                 		
+                	}
+                	else if(code == FINISH){
+                		String examHallID = in.readUTF();
+                		int participantSize= in.readInt();
+                		
+                		int userID=0;
+                		for(int i=0;i<participantSize;i++){
+                			userID = in.readInt();
+                			System.out.println("Received="+userID);
+                			examhallMgr.endStudentTakable(userID, examHallID);
+                		}
+
                 	}
                 } catch (IOException e) {
                     System.out.println(" Exception reading Streams: " + e);

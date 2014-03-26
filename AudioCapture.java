@@ -8,12 +8,12 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.TargetDataLine;
 
-public class AudioCapture implements Runnable { 
+class AudioCapture implements Runnable { 
 
-       TargetDataLine line; 
-       Thread thread; 
-       Socket s; 
-       BufferedOutputStream captrueOutputStream; 
+	private TargetDataLine line; 
+	private Thread thread; 
+	private Socket s; 
+	private BufferedOutputStream captrueOutputStream; 
 
        AudioCapture(Socket s){ 
          this.s=s; 

@@ -378,7 +378,6 @@ public class UIMenu extends JFrame implements ActionListener {
 						//each UIStudent will be able to determine which socket it belongs to.
 						if(user instanceof Student){
 							UIStudent uiStudent = new UIStudent(user, client, examHall);
-					    	AudioClient client = new AudioClient(6002);
 							uiStudent.setTitle("Student Exam");
 							uiStudent.setSize(800,600);
 							uiStudent.setVisible(true);
@@ -387,12 +386,10 @@ public class UIMenu extends JFrame implements ActionListener {
 						}
 						else{
 							UIInvigilator uiInvigilator = new UIInvigilator(user, client, examHall);
-							//AudioServer server = new AudioServer();
 							uiInvigilator.setTitle("Invigilator Exam");
 							uiInvigilator.setSize(screenWidth,screenHeight);
 							uiInvigilator.setVisible(true);
 							uiInvigilator.setResizable(false);
-							
 						}
 					}
 				}

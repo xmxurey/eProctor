@@ -1,5 +1,5 @@
 package eProctor;
-
+ 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -10,12 +10,12 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
-public class AudioPlayback implements Runnable { 
+class AudioPlayback implements Runnable { 
 
        final int bufSize = 16384; 
-       SourceDataLine line; 
-       Thread thread; 
-       Socket s; 
+       private SourceDataLine line; 
+       private Thread thread; 
+       private Socket s; 
 
        AudioPlayback(Socket s){ 
          this.s=s; 

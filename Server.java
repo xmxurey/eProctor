@@ -10,7 +10,7 @@ import java.text.*;
 import javax.swing.*;
 
 public class Server extends Thread{
-	int port = 2003;  
+	int port = 2001;  
 	int connectors = 50;
 	Socket client;
 	DataInputStream in;
@@ -19,11 +19,11 @@ public class Server extends Thread{
 	ArrayList<Session> ExamHallParticipantList;
 	
 	//Communication Protocol
-	private final int ENDOP = -1;
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
-	private final int ENDTAKABLE = 4;
+	private final int FINISH = 4;
+	private final int ENDEVENTLOG = 5;
 	
 	
 	public Server(){
@@ -85,15 +85,16 @@ public class Server extends Thread{
         }
     }
     //method to return list of students in a particular examhall
-    private synchronized void getStudentExamList(String e) {
+    private synchronized ArrayList getStudentExamList(String e) {
     	String examHallID = e;
+    	ArrayList participantList = new ArrayList();
         for (Session s : ExamHallParticipantList) {
         	if(s.getExamHallID().equals(examHallID)){
-        		s.writeInt(s.userID);
+        		participantList.add(s.userID);
         	}
         }
         
-        
+        return participantList;
     }
 	public static void main(String[] args) {
 		Server server = new Server();
@@ -143,40 +144,7 @@ public class Server extends Thread{
 						userID = in.readInt();
 						isStudent = in.readInt();
 						
-						System.out.println("examhallID=" + examHallID + " userID="+userID);
-						
-						//update database set connect =1
-						if(isStudent == 1){
-							st.execute("UPDATE ModuleAttendance SET Connected = '1' WHERE ExamHallID = '" + examHallID + "' and userID='"+ userID + "'");
-						}
-						
-						//get userName
-						ResultSet res = st.executeQuery("SELECT user.Name from user where userID='" + userID + "'");
-						
-						String name="";
-						
-						while (res.next()){
-							name = res.getString("Name");
-						}
-						
-						//Check if eventlog is created
-						res = st.executeQuery("Select eventLogID FROM examhall where examHallID='" + examHallID + "'");
-						int eventLogID=0;
-						while (res.next()){
-							eventLogID = res.getInt("eventLogID");
-						}
-						PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt", true)));
-						if(eventLogID<=0){
-							//no eventlog exist. Need to create eventlog
-							DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-							Calendar cal = Calendar.getInstance();
-							
-							writer.println("Eventlog created on "+cal.getTime());
-						}
-	
-						writer.println(name+ " has joined the examHall");
-						writer.close();
-						
+						connectExam(examHallID, userID, isStudent);
 					}
 					else if (code == MSG){
 						String msg = in.readUTF();
@@ -189,26 +157,19 @@ public class Server extends Thread{
 						while (res.next()){
 							name = res.getString("Name");
 						}
-						//UPDATE EVENTlOG
-						PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt", true)));
-
-						//no eventlog exist. Need to create eventlog
-						DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-						Calendar cal = Calendar.getInstance();
+						sendMsg(msg, name);
 						
-	
-						writer.println(name+ " ("+cal.getTime()+") says: "+ msg);
-						writer.close();
-						
-						broadcast(getExamHallID());
 					}
 					else if(code == START){
 						startExam(getExamHallID());
 					}
-					else if(code == ENDTAKABLE){
+					else if(code == FINISH){
 						//send list of students in examhall back to examhallManager
-						getStudentExamList(getExamHallID());
-						out.writeInt(ENDOP);
+						ArrayList participantList = new ArrayList();
+						participantList = getStudentExamList(getExamHallID());
+						sendList(participantList);
+						
+						
 					}
 				}
 				
@@ -219,6 +180,69 @@ public class Server extends Thread{
 	        catch (Exception e) {
 	        	e.printStackTrace();
 	        }
+		}
+		//Connect to exam
+		public void connectExam(String examHallID, int userID, int isStudent){
+			try{
+				Class.forName(driver);
+		        Connection conn = DriverManager.getConnection(url+dbName+username+password);
+		        Statement st = conn.createStatement();
+				//update database set connect =1
+				if(isStudent == 1){
+					st.execute("UPDATE ModuleAttendance SET Connected = '1' WHERE ExamHallID = '" + examHallID + "' and userID='"+ userID + "'");
+				}
+				
+				//get userName
+				ResultSet res = st.executeQuery("SELECT user.Name from user where userID='" + userID + "'");
+				
+				String name="";
+				
+				while (res.next()){
+					name = res.getString("Name");
+				}
+				
+				//Check if eventlog is created
+				res = st.executeQuery("Select eventLogID FROM examhall where examHallID='" + examHallID + "'");
+				int eventLogID=0;
+				while (res.next()){
+					eventLogID = res.getInt("eventLogID");
+				}
+				PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt", true)));
+				if(eventLogID<=0){
+					//no eventlog exist. Need to create eventlog
+					DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+					Calendar cal = Calendar.getInstance();
+					
+					writer.println("Eventlog created on "+cal.getTime());
+				}
+	
+				writer.println(name+ " has joined the examHall");
+				writer.close();
+			}
+			catch(Exception ex){
+	        	ex.printStackTrace();
+			}
+		}
+		
+		//send msg
+		public void sendMsg(String msg, String name){
+			try{
+				//UPDATE EVENTlOG
+				PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt", true)));
+	
+				//no eventlog exist. Need to create eventlog
+				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				Calendar cal = Calendar.getInstance();
+				
+	
+				writer.println(name+ " ("+cal.getTime()+") says: "+ msg);
+				writer.close();
+				
+				broadcast(getExamHallID());
+			}
+			catch(IOException ex){
+				ex.printStackTrace();
+			}
 		}
 		
 		//send to client informing the communication protocol
@@ -251,8 +275,35 @@ public class Server extends Thread{
 	        }
 	        return true;
 	    }
+	
+		//send to invigilator participantList
+		private void sendList(ArrayList participantList){
+			try {
+	            DataOutputStream out = new DataOutputStream(client.getOutputStream());
+	            int userID=0;
+
+	            out.writeInt(FINISH);
+            	out.writeUTF(examHallID);
+            	out.writeInt(participantList.size());
+            	
+	            for(int i=0;i<participantList.size();i++){
+	            	userID = (int)participantList.get(i);
+	            	out.writeInt(userID);
+	            }
+
+            	out.writeInt(FINISH);
+            	out.writeInt(participantList.size());
+	        }
+			// if an error occurs, do not abort just inform the user
+	        catch (IOException e) {
+	            System.out.println("Error sending participantList");
+	        }
+		}
+	
 	}
+	
 }
+
 
 
 
