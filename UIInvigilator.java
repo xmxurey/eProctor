@@ -30,6 +30,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private JScrollPane downScrollPane;
 	
 	private Screen[] student;
+	private Audio[] audio;
 	//Communication Protocol
 	private final int CONNECT = 1;
 	private final int MSG = 2;
@@ -66,9 +67,12 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 		pCenter.setLayout(new GridLayout(2,3));
 		
 		student = new Screen[6];
+		audio = new Audio[6];
 		for (int i=0; i<6; i++){
 			student[i] = new Screen(5000+i);
+			audio[i] = new Audio(6000+i);
 			pCenter.add(student[i]);
+			new Thread(audio[i]).start();
 			new Thread(student[i]).start(); 
 	        SwingUtilities.invokeLater(new Runnable(){ 
 	            public void run() { 

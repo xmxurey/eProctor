@@ -1,9 +1,9 @@
 package eProctor;
 
 import com.sun.pdfview.PDFFile;
-
 import com.sun.pdfview.PDFPage;
 import com.sun.pdfview.PagePanel;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.net.Socket;
@@ -49,6 +49,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	public UIStudent(User u, Socket c, ExamHall e){
 		
 		new WebcamClient().start();
+		AudioClient audioClient = new AudioClient(6002);
 		//Start all socket connection
 		client = c;
 		user = u;	
