@@ -369,7 +369,8 @@ public class UIMenu extends JFrame implements ActionListener {
 					//connect to server
 					client = examHallMgr.connectExamHall(examHall, user);
 					if(client == null){
-						System.out.println("Connection fail");
+						JOptionPane.showMessageDialog(null,
+                			    "Connection Fail: Invigilator has not entered / You are logged in.");
 						lblMsg.setText("Connection Fail");
 						lblMsg.setForeground(Color.red);
 					}
@@ -385,11 +386,11 @@ public class UIMenu extends JFrame implements ActionListener {
 							
 						}
 						else{
-							UIInvigilator uiInvigilator = new UIInvigilator(user, client, examHall);
-							uiInvigilator.setTitle("Invigilator Exam");
-							uiInvigilator.setSize(screenWidth,screenHeight);
-							uiInvigilator.setVisible(true);
-							uiInvigilator.setResizable(false);
+							UIInvigilator uiInvigi = new UIInvigilator(user, client, examHall);
+							uiInvigi.setTitle("Invigilator");
+							uiInvigi.setExtendedState(JFrame.MAXIMIZED_BOTH);
+							uiInvigi.setVisible(true);
+							uiInvigi.setResizable(false);
 							
 						}
 					}

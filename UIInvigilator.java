@@ -2,10 +2,8 @@ package eProctor;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.util.*;
 import java.util.Timer;
@@ -22,14 +20,21 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private ExamHall examHall;
 	
 	//create UI
-	private JPanel pCenter, pBelow;
-	private JPanel pBEast, pBWest, p1;
-	private JLabel lblMsg, lblTimer;
-	private JButton btnStartStop;
+	private JPanel pCenter, pBLeft,pBRight;
+	private JLabel lblMsg, lblTimer,lblBackground;
+	private JButton btnStartStop, btnTerminate;
 	private JTextField txtMsg;
 	private JTextArea txtDisplay;
 	private String displayText;	
 	private JScrollPane downScrollPane;
+	private JComboBox ddlTerminate;
+	private JLayeredPane layeredPane;
+	private ImageIcon background = new ImageIcon("images/Invigilatorbg.jpg");
+	private ImageIcon startButton = new ImageIcon("Images/invstartexam1.png");
+	private ImageIcon finishButton = new ImageIcon("Images/endexam1.png");
+	private ImageIcon terminate= new ImageIcon("Images/login1.png");
+	
+	private Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 	
 	private Screen[] student;
 	private Audio[] audio;
@@ -39,12 +44,13 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private final int START = 3;
 	private final int FINISHALL = 4;
 	private final int FINISHTIMER = 5;
+	private final int TERMINATE = 6;
 	
 	//managers
 	private ExamHallManager examhallMgr = new ExamHallManager();
 	
-	//Recording
-	private Recorder recorder;
+	//Arraylist of participants
+	private ArrayList studentList = new ArrayList();
 	
 	//timer
 	Timer timer = new Timer();
@@ -56,7 +62,6 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	}
 	public UIInvigilator(User u, Socket c, ExamHall e){
 		
-		
 		//Start all socket connection
 		client = c;
 		user = u;	
@@ -65,17 +70,27 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 		Thread t = new Thread(this);
    		t.start(); 
    		
-		Container container = getContentPane();
+   		Container container = getContentPane();
+		
+		//layeredPane settings
+		layeredPane = new JLayeredPane();
+    	layeredPane.setPreferredSize(d);
+    	lblBackground = new JLabel(background);
+    	lblBackground.setOpaque(true); 
+        lblBackground.setBounds(0,0,d.width,d.height); 
+        layeredPane.add(lblBackground, new Integer(0));
 		
 		pCenter = new JPanel();
-		pCenter.setLayout(new GridLayout(2,3));
+		pCenter.setLayout(new GridLayout(2,3,10,10));
+		pCenter.setBounds(2,3,(d.width-4),(int)(d.height/1.35));
+		pCenter.setOpaque(false);
 		
 		student = new Screen[6];
 		audio = new Audio[6];
 		for (int i=0; i<6; i++){
 			student[i] = new Screen(5000+i);
 			audio[i] = new Audio(6000+i);
-			pCenter.add(student[i]);
+			pCenter.add(student[i],new Integer(1));
 			new Thread(audio[i]).start();
 			new Thread(student[i]).start(); 
 	        SwingUtilities.invokeLater(new Runnable(){ 
@@ -83,43 +98,83 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	                setVisible(true); 
 	            }});
 		} 
-        
-		container.add(pCenter,BorderLayout.CENTER);
-	
 		//creating pBelow 
-		pBelow = new JPanel(new BorderLayout());
+		pBLeft = new JPanel();
+		pBLeft.setOpaque(false);
+		pBLeft.setBounds(0,(int)(d.height/1.34),(d.width-120),(int)(d.height*(1-1/1.28)));
 		
-		//creating pBEast
-		
-		pBWest = new JPanel(new BorderLayout());
-		lblMsg = new JLabel("Enter Message");
-		txtMsg = new JTextField();
-		txtMsg.addActionListener(this);
-		p1 = new JPanel(new BorderLayout());
-		p1.add(lblMsg,BorderLayout.WEST);
-		p1.add(txtMsg, BorderLayout.CENTER);
-		pBWest.add(p1, BorderLayout.SOUTH);
+		pBRight = new JPanel();
+		pBRight.setOpaque(false);
+		pBRight.setBounds((d.width-120),(int)(d.height/1.34),120,(int)(d.height*(0.96-1/1.28)));
+	
 		//creating taDisplay
 		txtDisplay = new JTextArea(displayText);
 		txtDisplay.setEnabled(false);
+		Color color=new Color(244,254,232,69);
+		txtDisplay.setBackground(color);
+		txtDisplay.setBounds(0,(int)(d.height/1.28),(d.width-150),100);
+		txtDisplay.setPreferredSize(new Dimension((d.width-150),100));
 		downScrollPane = new JScrollPane(txtDisplay);
-		downScrollPane.setPreferredSize(new Dimension(10,60));
-		pBWest.add(downScrollPane, BorderLayout.CENTER);
+		downScrollPane.setBounds((d.width-150),(int)(d.height/1.25),10,100);
+		downScrollPane.setPreferredSize(new Dimension(10,100));
 		
+		//creating pBEast
 		
-		pBelow.add(pBWest, BorderLayout.CENTER);
+		lblMsg = new JLabel("Enter Message");
+		lblMsg.setBounds(0,400,40,20);
+		lblMsg.setFont(new Font("Serif", Font.BOLD, 15));
+    	lblMsg.setForeground(Color.white);
+		lblMsg.setOpaque(false);
+		txtMsg = new JTextField(100);
+		txtMsg.setBounds(0,((int)(d.height/1.28)),700,20);
+		txtMsg.setOpaque(false);
+		txtMsg.addActionListener(this);
 		
-		//creating pBEast 
-		pBEast = new JPanel(new GridLayout(2,1));
+		ddlTerminate = new JComboBox();
+		ddlTerminate.setBounds((d.width-80),(int)(d.height/1.28),50,20);
+		ddlTerminate.setPreferredSize(new Dimension(50,20));
+		
+		btnTerminate = new JButton(terminate);
+		btnTerminate.addActionListener(this);
+    	btnTerminate.setContentAreaFilled(false);
+        btnTerminate.setFocusPainted(false);
+        btnTerminate.setBorder(BorderFactory.createEmptyBorder());
+        btnTerminate.setRolloverIcon(new ImageIcon("Images/terminate2.png"));
+        btnTerminate.setPressedIcon(new ImageIcon("Images/terminate3.png"));
+        btnTerminate.setBounds((d.width-120),(int)(d.height/1.28),20,10);
+		
 		lblTimer = new JLabel("--:--:--");
-		pBEast.add(lblTimer);
-		btnStartStop = new JButton("Start");
+		lblTimer.setFont(new Font("Serif", Font.BOLD, 20));
+    	lblTimer.setForeground(Color.white);
+		lblTimer.setBounds((d.width-80),(int)(d.height/1.28),80,20);
+		btnStartStop = new JButton(startButton);
+		//btnStartStop = new JButton("Start");
 		btnStartStop.addActionListener(this);
-		pBEast.add(btnStartStop);
-		btnStartStop.setHorizontalAlignment(2);
-		pBelow.add(pBEast,BorderLayout.EAST);
+    	btnStartStop.setContentAreaFilled(false);
+        btnStartStop.setFocusPainted(false);
+        btnStartStop.setBorder(BorderFactory.createEmptyBorder());
+        btnStartStop.setRolloverIcon(new ImageIcon("Images/invstartexam2.png"));
+        btnStartStop.setPressedIcon(new ImageIcon("Images/invstartexam3.png"));
+        btnStartStop.setBounds((d.width-120),(int)(d.height/1.28),20,10);
 		
-		container.add(pBelow,BorderLayout.SOUTH);
+		pBLeft.add(txtDisplay, new Integer(1));
+		pBLeft.add(downScrollPane,new Integer(1));
+		pBLeft.add(lblMsg,new Integer(1));
+		pBLeft.add(txtMsg,new Integer(1));
+		
+		pBRight.add(ddlTerminate,new Integer(1));
+		pBRight.add(btnTerminate,new Integer(1));
+		pBRight.add(lblTimer,new Integer(1));
+		pBRight.add(btnStartStop,new Integer(1));
+		
+	
+		
+		
+		layeredPane.add(pCenter,new Integer(1));
+		layeredPane.add(pBLeft, new Integer(1));
+		layeredPane.add(pBRight, new Integer(1));
+		
+		container.add(layeredPane);
 		
 		
 	}
@@ -128,7 +183,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	{
 		UIInvigilator uiInvigi = new UIInvigilator();
 		uiInvigi.setTitle("Invigilator");
-		uiInvigi.setSize(800,600);
+		uiInvigi.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		uiInvigi.setVisible(true);
 		uiInvigi.setResizable(false);
 		uiInvigi.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -146,30 +201,56 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 				out.writeUTF(txtMsg.getText());
 				txtMsg.setText("");
 			}
-			else if(e.getSource() == btnStartStop){
-				if (btnStartStop.getText() == ("Start")){
-					boolean start = examhallMgr.startExam(examHall);
+			else if(e.getSource() instanceof JButton){
+				JButton btn = (JButton)e.getSource();
+				String btnImage = btn.getIcon().toString();
+				
+				if(e.getSource() == btnStartStop){
+					if (btnImage.equals(startButton.toString())){
+						boolean start = examhallMgr.startExam(examHall);
+						
+						if(start){
+							btnStartStop.setIcon(finishButton);
+					        btnStartStop.setRolloverIcon(new ImageIcon("Images/endexam3.png"));
+					        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
+							//btnStartStop.setEnabled(false);
+							//start exam
+							out.writeInt(START);
+						}
+						
+					}
+					else if (btnImage.equals(finishButton.toString())){
+						//stop exam
+							//stop recording
+						
+							//set takeable to 0
+							examhallMgr.finishExam(client, examHall);
+							btnStartStop.setEnabled(false);
+							//send answers
+							
+						
+					}
+				}
+				else if (btnImage.equals(terminate.toString())){
+					//get user ID
+					String uID = (String)ddlTerminate.getSelectedItem();
+					int userID = Integer.parseInt(uID);
 					
-					if(start){
-						btnStartStop.setText("Finish");
-						//btnStartStop.setEnabled(false);
-						//start exam
-						out.writeInt(START);
+					//pop out message box for reason of termination
+					String reason = JOptionPane.showInputDialog(null,
+							"Termination Reason :");    	
+					if(reason!=null){
+						//send to server to terminate userID from examHall
+						examhallMgr.terminateStudent(client, userID, examHall, reason);
+					}
+					else{
+						//No termination
 					}
 					
-				}
-				else if ((btnStartStop.getText() == ("Finish"))){
-					//stop exam
-						//stop recording
-					
-						//set takeable to 0
-						examhallMgr.finishExam(client, examHall);
-						btnStartStop.setEnabled(false);
-						//send answers
-						
 					
 				}
 			}
+			
 		}
 		catch (IOException ex){
 			System.out.println("IO Exception");
@@ -187,7 +268,13 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 try {
                 	code = in.readInt();
                 	
-                	if(code == MSG){
+                	
+                	if(code == CONNECT){
+                		int userID = in.readInt();
+                		studentList.add(""+userID);
+                		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
+                	}
+                	else if(code == MSG){
                 		//display msg from eventlog
                 		String msg=in.readUTF();
                 		txtDisplay.setText(msg);
@@ -203,14 +290,8 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 		//get exam paper
                 		
                 		
-                		//start recording
-                		recorder = new Recorder();
-            			try {
-            				recorder.startRecording();
-            			} catch (Exception e1) {
-            				// TODO Auto-generated catch block
-            				e1.printStackTrace();
-            			}
+                		//start Recording
+                		
                 	}
                 	else if(code == FINISHALL){
                 		String examHallID = in.readUTF();
@@ -221,19 +302,32 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 			userID = in.readInt();
                 			
                 			examhallMgr.endStudentTakable(userID, examHallID);
+                			studentList.remove(""+userID);
+                    		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
+                			//Terminate all server interface
                 		}
-                		
-                		//end recording
-                		try {
-            				recorder.endRecording();
-            			} catch (Exception e1) {
-            				// TODO Auto-generated catch block
-            				e1.printStackTrace();
-            			}
 
                 	}
                 	else if(code == FINISHTIMER){
-                		time.stop();
+                		if(time != null)
+                			time.stop();
+                	}
+                	else if(code == TERMINATE){
+                		String examHallID = in.readUTF();
+                		int userID= in.readInt();
+
+                		examhallMgr.endStudentTakable(userID, examHallID);
+
+                		//delete userid from combobox
+                		studentList.remove(""+userID);
+                		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
+
+                		//End screen session and audio session
+                		
+                		
+						//display terminate success message	
+                		JOptionPane.showMessageDialog(null,
+                			    "Student has been terminated.");
                 	}
                 } 
                 catch (IOException e) {
@@ -280,7 +374,9 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 			timesUp = true;
 			
 			if(timesUp==true){
-        		btnStartStop.setText("Finish");
+				btnStartStop.setIcon(finishButton);
+		        btnStartStop.setRolloverIcon(new ImageIcon("Images/endexam3.png"));
+		        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
         		btnStartStop.setEnabled(true);
         	}
 		}

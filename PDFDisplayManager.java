@@ -29,7 +29,7 @@ public class PDFDisplayManager{
 //            frame.setVisible(true);
 //
             //load a pdf from a byte buffer
-            File file = new File("eProctorServer/ExamQuestion/TestPDF.pdf");
+            File file = new File("eProctorServer/ExamQuestion/ExamHall=1.pdf");
             RandomAccessFile raf = new RandomAccessFile(file, "r");
             FileChannel channel = raf.getChannel();
             ByteBuffer buf = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());

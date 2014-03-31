@@ -1,5 +1,4 @@
 package eProctor;
-
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 import com.sun.pdfview.PagePanel;
@@ -21,23 +20,30 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	private User user;
 	private ExamHall examHall;
 
+
     //GUI
     JScrollPane scrollQuestionField, scrollAnswerField, downScrollPane;
     JPanel questionPlusPhotoPanel,answerPlusButtonPanel, photoPanel, buttonPanel,
             topPanel, downPanel, downPanelLeft, downPanelRight, p1;
-    JLabel lblTimer, lblMsg;
-    JTextField txtQuestion, txtAnswer, txtMsg;
+    JLabel lblMsg, lblTimer;
+    JTextField txtAnswer, txtMsg;
     JTextArea txtDisplay;
-    JButton btnSubmit,btnNextPage, btnPreviousPage;
+    JButton btnSubmit,btnGetPaper,btnNextPage, btnPreviousPage;
+    int pageIndex = 1, pageCount;
+    PDFPage page;
+    PagePanel pagePanel = new PagePanel();
+    PDFFile pdffile;
 
-	//Communication Protocol
+
+
+    //Communication Protocol
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
 	
 	//timer
-	Timer timer = new Timer();
-    boolean timesUp = false;
+//	Timer timer = new Timer();
+//    boolean timesUp = false;
     long delay=0;
     
 	public UIStudent(){		
@@ -45,7 +51,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	}
 	public UIStudent(User u, Socket c, ExamHall e){
 		
-		new WebcamClient().start();
+//		new WebcamClient().start();
 		//Start all socket connection
 		client = c;
 		user = u;	
@@ -61,7 +67,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         container.setLayout(new BorderLayout());
 
         topPanel = new JPanel(new GridLayout(2,1));
-        PagePanel pagePanel = new PagePanel();
+//        pagePanel = new PagePanel();
         scrollQuestionField = new JScrollPane(pagePanel);
 
         photoPanel = new JPanel(new BorderLayout());
@@ -91,6 +97,15 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         bagCons.gridwidth = 1;
         questionPlusPhotoPanel.add(photoPanel,bagCons);
 
+
+        //display pdf page
+        pdffile = PDFDisplayManager.setup();
+        pageCount = pdffile.getNumPages();
+//        page = pdffile.getPage(0);
+//        pagePanel.showPage(page);
+//
+
+
         //anwerPlusButtonPanel---------------------------------------
         answerPlusButtonPanel = new JPanel(new GridBagLayout());
         //divide the space into 4 colums
@@ -107,6 +122,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         scrollAnswerField.setVisible(true);
         scrollAnswerField.setBackground(Color.WHITE);
 
+
+
         //set fleep page buttons positions in the button panel
         bagCons.gridx = 0;
         bagCons.gridy = 0;
@@ -116,7 +133,10 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         buttonPanel = new JPanel(new GridBagLayout());
         btnNextPage = new JButton(">>");
         btnPreviousPage = new JButton("<<");
+        btnGetPaper = new JButton("Get Question Paper");
         GridBagConstraints btnBagCons = new GridBagConstraints();
+        btnBagCons.gridwidth = GridBagConstraints.REMAINDER;
+        buttonPanel.add(btnGetPaper,btnBagCons);
         btnBagCons.gridwidth = 1;
         btnBagCons.fill = GridBagConstraints.BOTH;
         buttonPanel.add(btnPreviousPage,btnBagCons);
@@ -131,6 +151,11 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
         topPanel.add(questionPlusPhotoPanel,BorderLayout.CENTER);
         topPanel.add(answerPlusButtonPanel,BorderLayout.SOUTH);
+
+        //button listeners
+        btnGetPaper.addActionListener(this);
+        btnNextPage.addActionListener(this);
+        btnPreviousPage.addActionListener(this);
 
         //downPanel---------------------------------------------------------
         downPanel = new JPanel();
@@ -174,19 +199,33 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         container.add(downPanel, BorderLayout.SOUTH);
 
 
-        PDFFile pdffile = PDFDisplayManager.setup();
-        // show the first page
-        PDFPage page = pdffile.getPage(0);
-        pagePanel.showPage(page);
-
-
-
     }
 	
 	public void actionPerformed(ActionEvent e){
 		DataInputStream in;
 		DataOutputStream out;
-		try{
+        if (e.getSource() == btnGetPaper){
+            page = pdffile.getPage(1);
+            pagePanel.showPage(page);
+        }
+        else if (e.getSource() == btnNextPage){
+            if(pageIndex == pageCount-1);
+            else{ pageIndex++;
+                page = pdffile.getPage(pageIndex);
+                pagePanel.showPage(page);
+
+            }
+        }
+        else if (e.getSource() == btnPreviousPage){
+            if(pageIndex == 1);
+            else{
+                pageIndex--;
+                page = pdffile.getPage(pageIndex);
+                pagePanel.showPage(page);
+            }
+        }
+
+        try{
 			in = new DataInputStream(client.getInputStream());
 			out = new DataOutputStream(client.getOutputStream());
 			if (e.getSource() == txtMsg){
@@ -208,10 +247,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
             System.out.println("New Session Started");
             int code=0;
             while (true) {
-
                 try {
-                	code = in.readInt();
-                	
+                    code = in.readInt();
                 	if(code == MSG){
                 		//display msg from eventlog
                 		String msg=in.readUTF();
@@ -222,11 +259,9 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
-                		(new Thread(new CountDown(delay))).start();
-                		
+                        (new Thread(new CountDown(delay,lblTimer))).start();
                 		//get exam paper
-                		
-                		
+
                 	}
                 } catch (IOException e) {
                     System.out.println(" Exception reading Streams: " + e);
@@ -243,41 +278,11 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	
 	public static void main(String[] args){
     	UIStudent uiStudent = new UIStudent();
-    	uiStudent.setBounds(0, 0, 800, 600);
-    	uiStudent.setVisible(true);
-    	uiStudent.setResizable(false);
-    	uiStudent.setTitle("Student Exam");
+//    	uiStudent.setBounds(0, 0, 800, 600);
+//    	uiStudent.setVisible(true);
+//    	uiStudent.setResizable(false);
+//    	uiStudent.setTitle("Student Exam");
     } 
 	
-	//countdown timer
-	class CountDown implements Runnable{
-		long sec;
-		long HH;
-		long MM;
-		long SS;
-		
-		public CountDown(long s){
-			sec = s;
-			
-		}
-		public void run(){
-			while(sec>=0){
 
-				SS = sec % 60;
-				MM = (sec/60) % 60;
-				HH = sec/3600;
-				try{
-					Thread.sleep(1000);
-				}
-				catch (InterruptedException x) {
-                }
-				lblTimer.setText(HH + ":" + MM + ":" + SS);
-				sec--;
-				
-			}
-			lblTimer.setText("Times Up");
-			timesUp = true;
-			
-		}
-	}
 }

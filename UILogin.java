@@ -21,7 +21,6 @@ public class UILogin extends JFrame implements ActionListener{
 		
 	public UILogin(){
     	Container c = getContentPane();
-    	
     	//loginFrame = new JFrame();
     	
     	lblUser = new JLabel("  Username:");
@@ -85,6 +84,7 @@ public class UILogin extends JFrame implements ActionListener{
 		if(e.getSource() == btnLogin){
 			
 			User user = userMgr.authenticate(txtUserID.getText().trim(), txtPassword.getText().trim());
+			
 			
 			if(user == null){
 				lblMsg.setText("Incorrect username/password");

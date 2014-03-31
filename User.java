@@ -15,6 +15,7 @@ public class User {
 	private String password;
 	private String email;
 	private String name;
+	private boolean isStudent=true;
 	
 	public User(int u, String p, String e, String n){
 		userID = u;
@@ -47,6 +48,12 @@ public class User {
 	}
 	public String getName(){
 		return this.name;
+	}
+	public void setStudent(boolean n){
+		this.isStudent = n;
+	}
+	public boolean isStudent(){
+		return this.isStudent;
 	}
 
 }
