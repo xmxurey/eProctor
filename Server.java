@@ -252,6 +252,8 @@ public class Server extends Thread{
 	
 				writer.println(name+ " has joined the examHall");
 				writer.close();
+				
+				broadcast(getExamHallID());
 			}
 			catch(Exception ex){
 	        	ex.printStackTrace();

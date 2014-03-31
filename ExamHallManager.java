@@ -118,7 +118,6 @@ public class ExamHallManager {
 				out.writeInt(0);
 			}
 			
-			
 			return con; 
 	   	  } 
 		catch (UnknownHostException e) {

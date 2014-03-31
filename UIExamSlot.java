@@ -11,12 +11,15 @@ public class UIExamSlot extends JFrame implements ActionListener{
 
 	private String moduleCode;
 	private JPanel pCenter, pButton;
-	private JLabel lblModuleCode, lblExamSlot, lblModuleCode2, lblMsg, lblFiller;
+	private JLabel lblModuleCode, lblExamSlot, lblModuleCode2, lblMsg, lblFiller, lblBackground;
 	private JComboBox ddlExamSlot;
 	private JButton btnSelect;
 	private ArrayList<String> examSlotList;
 	private ArrayList<String> unSortedExamSlotList = new ArrayList();;
 	private User user;
+	private JLayeredPane layeredPane;
+	private ImageIcon selectButton = new ImageIcon("Images/select1.png");
+	private ImageIcon background = new ImageIcon("Images/loginbg.jpg");
 	
 	private ExamListManager examListMgr = new ExamListManager();
 	
@@ -30,6 +33,14 @@ public class UIExamSlot extends JFrame implements ActionListener{
 		
 		Container c = getContentPane();
 		c.setLayout(new BorderLayout());
+		
+		//layeredPane settings
+    	layeredPane = new JLayeredPane();
+    	layeredPane.setPreferredSize(new Dimension(450, 200));
+    	lblBackground = new JLabel(background);
+    	lblBackground.setOpaque(true); 
+        lblBackground.setBounds(0,0,450,200); 
+        layeredPane.add(lblBackground, new Integer(0));
 		
 		//creating pCenter
 		pCenter = new JPanel(new GridBagLayout());
@@ -84,8 +95,13 @@ public class UIExamSlot extends JFrame implements ActionListener{
 		b.gridy = 1;
 		pCenter.add(ddlExamSlot, b);
 		
-		btnSelect = new JButton("Select");
+		btnSelect = new JButton(selectButton);
 		btnSelect.addActionListener(this);
+		btnSelect.setContentAreaFilled(false);
+		btnSelect.setFocusPainted(false);
+		btnSelect.setBorder(BorderFactory.createEmptyBorder());
+		btnSelect.setRolloverIcon(new ImageIcon("Images/select2.png"));
+		btnSelect.setPressedIcon(new ImageIcon("Images/select3.png"));
 		b.weightx = 0.5;
 		b.gridx = 1;
 		b.gridy = 2;
@@ -98,10 +114,13 @@ public class UIExamSlot extends JFrame implements ActionListener{
 		lblFiller = new JLabel("");		
 		lblMsg = new JLabel("");
 		
+		pCenter.setBounds(15,0,420,200);
+		pButton.setOpaque(false);
+		pCenter.setOpaque(false);
 		
-		//Adding to container
-		c.add(pCenter, BorderLayout.NORTH);
-		c.add(lblMsg, BorderLayout.SOUTH);
+		layeredPane.add(pCenter, new Integer(1));
+		c.add(layeredPane);
+		
 		
 	}
 	

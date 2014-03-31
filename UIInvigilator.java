@@ -2,8 +2,10 @@ package eProctor;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.util.*;
 import java.util.Timer;
@@ -41,6 +43,9 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	//managers
 	private ExamHallManager examhallMgr = new ExamHallManager();
 	
+	//Recording
+	private Recorder recorder;
+	
 	//timer
 	Timer timer = new Timer();
     boolean timesUp = false;
@@ -51,8 +56,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	}
 	public UIInvigilator(User u, Socket c, ExamHall e){
 		
-		//new WebcamServer();
-
+		
 		//Start all socket connection
 		client = c;
 		user = u;	
@@ -199,8 +203,14 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 		//get exam paper
                 		
                 		
-                		//start Recording
-                		
+                		//start recording
+                		recorder = new Recorder();
+            			try {
+            				recorder.startRecording();
+            			} catch (Exception e1) {
+            				// TODO Auto-generated catch block
+            				e1.printStackTrace();
+            			}
                 	}
                 	else if(code == FINISHALL){
                 		String examHallID = in.readUTF();
@@ -212,6 +222,14 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 			
                 			examhallMgr.endStudentTakable(userID, examHallID);
                 		}
+                		
+                		//end recording
+                		try {
+            				recorder.endRecording();
+            			} catch (Exception e1) {
+            				// TODO Auto-generated catch block
+            				e1.printStackTrace();
+            			}
 
                 	}
                 	else if(code == FINISHTIMER){

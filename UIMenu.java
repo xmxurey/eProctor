@@ -378,10 +378,10 @@ public class UIMenu extends JFrame implements ActionListener {
 						//each UIStudent will be able to determine which socket it belongs to.
 						if(user instanceof Student){
 							UIStudent uiStudent = new UIStudent(user, client, examHall);
-							uiStudent.setTitle("Student Exam");
-							uiStudent.setSize(800,600);
-							uiStudent.setVisible(true);
-							uiStudent.setResizable(false);
+							//uiStudent.setTitle("Student Exam");
+							//uiStudent.setSize(800,600);
+							//uiStudent.setVisible(true);
+							//uiStudent.setResizable(false);
 							
 						}
 						else{

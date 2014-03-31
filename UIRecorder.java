@@ -36,29 +36,18 @@ public class UIRecorder extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e){
 		if(e.getSource() == btnStart){
 			recorder = new Recorder();
-			System.out.println("######### Starting Easy Capture Recorder #######");
-			Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-			System.out.println("Your Screen [Width,Height]:" + "["
-					+ screen.getWidth() + "," + screen.getHeight() + "]");
-			Scanner sc = new Scanner(System.in);
-			System.out.println("Rate 20 Frames/Per Sec.");
-			System.out.print("Now move to the screen you want to record");
-
-			File f = new File(recorder.store);
-			if(!f.exists()){
-				f.mkdir();
+			try {
+				recorder.startRecording();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
-			recorder.startRecord();
-			System.out.println("\nEasy Capture is recording now!!!!!!!");
-
 		}
 		
 		if(e.getSource() == btnEnd){
-			recorder.record = false;
-			System.out.println("Easy Capture has stopped.");
 			try {
-				recorder.makeVideo(System.currentTimeMillis()+".mov");
-			} catch (MalformedURLException e1) {
+				recorder.endRecording();
+			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}

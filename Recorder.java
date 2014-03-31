@@ -50,7 +50,10 @@ public class Recorder {
 	/**
 	 * 
 	 */
-	public void startRecord() {
+	
+	public Recorder(){}
+	
+	public static void startRecord() {
 		Thread recordThread = new Thread() {
 			@Override
 			public void run() {
@@ -83,7 +86,7 @@ public class Recorder {
 	 * @throws MalformedURLException 
 	 * 
 	 */
-	public void makeVideo(String movFile) throws MalformedURLException {
+	public static void makeVideo(String movFile) throws MalformedURLException {
 		System.out
 				.println("#### Easy Capture making video, please wait!!! ####");
 		JpegImagesToMovie imageToMovie = new JpegImagesToMovie();
@@ -108,45 +111,25 @@ public class Recorder {
 	 * @param args
 	 * @throws Exception
 	 */
-//	public static void main(String[] args) throws Exception {
-//		System.out.println("######### Starting Easy Capture Recorder #######");
-//		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-//		System.out.println("Your Screen [Width,Height]:" + "["
-//				+ screen.getWidth() + "," + screen.getHeight() + "]");
-//		Scanner sc = new Scanner(System.in);
-//		System.out.println("Rate 20 Frames/Per Sec.");
-//		System.out
-//				.print("Do you wanna change the screen capture area (y/n) ? ");
-//		if (sc.next().equalsIgnoreCase("y")) {
-//			System.out.print("Enter the width:");
-//			screenWidth = sc.nextInt();
-//			System.out.print("Enter the Height:");
-//			screenHeight = sc.nextInt();
-//			System.out.println("Your Screen [Width,Height]:" + "["
-//					+ screen.getWidth() + "," + screen.getHeight() + "]");
-//		}
-//		System.out
-//				.print("Now move to the screen you want to record");
-//		for(int i=0;i<5;i++){
-//			System.out.print(".");
-//			Thread.sleep(1000);
-//		}
-//		File f = new File(store);
-//		if(!f.exists()){
-//			f.mkdir();
-//		}
-//		startRecord();
-//		System.out
-//		.println("\nEasy Capture is recording now!!!!!!!");
-//
-//		System.out.println("Press e to exit:");
-//		String exit = sc.next();
-//		while (exit == null || "".equals(exit) || !"e".equalsIgnoreCase(exit)) {
-//			System.out.println("\nPress e to exit:");
-//			exit = sc.next();
-//		}
-//		record = false;
-//		System.out.println("Easy Capture has stopped.");
-//		makeVideo(System.currentTimeMillis()+".mov");
-//	}
+	public void startRecording() throws Exception {
+		System.out.println("######### Starting Easy Capture Recorder #######");
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		System.out.println("Your Screen [Width,Height]:" + "["
+				+ screen.getWidth() + "," + screen.getHeight() + "]");
+		Scanner sc = new Scanner(System.in);
+		
+		File f = new File(store);
+		if(!f.exists()){
+			f.mkdir();
+		}
+		startRecord();
+		System.out
+		.println("\nEasy Capture is recording now!!!!!!!");
+	}
+	
+	public void endRecording() throws Exception {
+		record = false;
+		System.out.println("Easy Capture has stopped.");
+		makeVideo(System.currentTimeMillis()+".mov");
+	}
 }
