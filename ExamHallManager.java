@@ -98,7 +98,7 @@ public class ExamHallManager implements Serializable{
 	}
 	
 	public Socket connectExamHall(ExamHall examHall, User user){
-		String serverAddr = "127.0.0.1"; 	// server host name
+		String serverAddr = "172.27.121.103"; 	// server host name
 		int portNo=2001;
 		//String serverAddr = "172.22.82.176"; 	// server host name
 		//int portNo = 2050;	     		// server port number
