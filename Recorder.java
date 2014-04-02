@@ -131,5 +131,19 @@ public class Recorder {
 		record = false;
 		System.out.println("Easy Capture has stopped.");
 		makeVideo(System.currentTimeMillis()+".mov");
+		File f = new File(store);
+		
+		//delete the directory
+		String[] children = f.list();
+		File photo;
+        for (int i = 0; i < children.length; i++) {
+           photo = new File(f, children[i]);
+           photo.delete();
+        }
+		f.delete();
+		if(!f.exists())
+			System.out.println("Delete Successfully");
+		else
+			System.out.println("Error");
 	}
 }

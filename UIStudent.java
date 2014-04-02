@@ -45,7 +45,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	}
 	public UIStudent(User u, Socket c, ExamHall e){
 		
-		new WebcamClient().start();
+		//new WebcamClient().start();
 		//Start all socket connection
 		client = c;
 		user = u;	
