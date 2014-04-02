@@ -17,7 +17,7 @@ import javax.swing.*;
  */
 public class PDFDisplayManager{
 
-    public static PDFFile setup(){
+    public static PDFFile setup(String examHallID){
         try{
 //            set up the frame and panel
 //            JFrame frame = new JFrame("PDF Test");
@@ -29,7 +29,7 @@ public class PDFDisplayManager{
 //            frame.setVisible(true);
 //
             //load a pdf from a byte buffer
-            File file = new File("eProctorServer/ExamQuestion/TestPDF.pdf");
+            File file = new File("eProctorServer/ExamQuestion/ExamHall="+examHallID+".pdf");
             RandomAccessFile raf = new RandomAccessFile(file, "r");
             FileChannel channel = raf.getChannel();
             ByteBuffer buf = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
@@ -50,7 +50,8 @@ public class PDFDisplayManager{
     }
 
     public static void main(String[] args) {
-        PDFDisplayManager.setup();
+    	String examHallID="";
+        PDFDisplayManager.setup(examHallID);
 
     }
 }

@@ -14,6 +14,7 @@ public class UserManager {
 		
 	}
 	//login
+	
 	public User authenticate(String userName, String pass){ 
 		//check if authenticate
 		String url = "jdbc:mysql://localhost:3306/";
@@ -71,6 +72,7 @@ public class UserManager {
 	        			faculty = res.getString("faculty");
 	        		}
 	        		User u = new Invigilator(userID, pass, email, name, faculty);
+	        		u.setStudent(false);
 	        		res.close();
 	        		st.close();
 	        		conn.close();
@@ -90,6 +92,5 @@ public class UserManager {
         }
 		return null;
 	}
-		
 	
 }

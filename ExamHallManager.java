@@ -10,13 +10,15 @@ import java.net.*;
 
 import javax.swing.*;
 
-public class ExamHallManager {
+public class ExamHallManager implements Serializable{
 	
 	//Communication Protocol
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
 	private final int FINISHALL = 4;
+	private final int FINISHTIMER = 5;
+	private final int TERMINATE = 6;
 	
 	//Connection
 	private DataInputStream in;
@@ -98,26 +100,30 @@ public class ExamHallManager {
 	public Socket connectExamHall(ExamHall examHall, User user){
 		String serverAddr = "127.0.0.1"; 	// server host name
 		int portNo=2001;
-		//String serverAddr = "172.22.105.24"; 	// server host name
-		//int portNo = 2000;	     		// server port number
+		//String serverAddr = "172.22.82.176"; 	// server host name
+		//int portNo = 2050;	     		// server port number
 		try {
-	  			// S1 - create a socket to connect to server          
+	  			// S1 - create a socket to connect to server      
+			
+			
 			Socket con = new Socket(serverAddr, portNo);
 			in = new DataInputStream(con.getInputStream());
 			out = new DataOutputStream(con.getOutputStream());
 			
-			out.writeUTF(examHall.getExamHallID());
-			out.writeInt(CONNECT);
 			//Send examhallID and user ID
 			out.writeUTF(examHall.getExamHallID());
 			out.writeInt(user.getUserID());
-			if(user instanceof Student){
-				out.writeInt(1);				
+			out.writeBoolean(user.isStudent());
+			
+			boolean allow=false;
+			allow = in.readBoolean();
+			if(allow){
+				out.writeInt(CONNECT);
 			}
 			else{
-				out.writeInt(0);
+				con = null;
 			}
-			
+
 			return con; 
 	   	  } 
 		catch (UnknownHostException e) {
@@ -181,4 +187,49 @@ public class ExamHallManager {
         }
 	}
 
+	public void terminateStudent(Socket c, int userID, ExamHall examHall, String reason){
+		try{
+			out = new DataOutputStream(c.getOutputStream());
+			out.writeInt(TERMINATE);
+			out.writeUTF(examHall.getExamHallID());
+			out.writeInt(userID);
+			out.writeUTF(reason);
+		}
+		catch(IOException ex){
+			System.out.println("Error : Unable to get I/O for the connection");
+		}
+	}
+	
+	public void sendFile(Socket c){  
+		byte[] byteArray; 
+	    BufferedInputStream bis;   
+	    BufferedOutputStream bos; 
+	    
+
+	    String fileToSend = "InvigilatorPC/ExamHall=1.mov";
+	    
+		try{
+			ServerSocket ss = new ServerSocket(3000, 1);
+			Socket socket = ss.accept();
+
+	    	File myFile = new File(fileToSend);
+			int count;
+	    	byte[] buffer = new byte[1024];
+
+	    	OutputStream out = socket.getOutputStream();
+	    	BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
+	    	while ((count = in.read(buffer)) >= 0) {
+	    	     out.write(buffer, 0, count);
+	    	     out.flush();
+	    	}
+			socket.close();
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	
+	
+	
 }

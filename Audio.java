@@ -23,7 +23,6 @@ public class Audio extends JPanel implements Runnable {
 		//ServerSocket ss; 
         try { 
             ss = new ServerSocket(port); 
-            System.out.println("success"); 
             while (true) { 
                 //s = null; 
                 try { 
