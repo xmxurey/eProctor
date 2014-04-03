@@ -300,11 +300,6 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
             				// TODO Auto-generated catch block
             				e1.printStackTrace();
             			}
-                		
-            			JOptionPane.showMessageDialog(null,
-            					"The recording has been saved to your computer./n"
-                        			    + "Student's Exam answers and Event Log have been sent to the server",
-                        			    "SYSTEM NOTICE", JOptionPane.PLAIN_MESSAGE);
             			
                 	}
                 	else if(code == SENDVIDEO){
@@ -316,6 +311,11 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
             				// TODO Auto-generated catch block
             				e1.printStackTrace();
             			}
+                		
+                		JOptionPane.showMessageDialog(null,
+            					"The recording has been saved to your computer.\n"
+                        			    + "Student's Exam answers and Event Log have been sent to the server",
+                        			    "SYSTEM NOTICE", JOptionPane.PLAIN_MESSAGE);
                 	}
                 	else if(code == FINISHALL){
                 		String examHallID = in.readUTF();

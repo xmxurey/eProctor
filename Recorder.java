@@ -132,5 +132,16 @@ public class Recorder {
 		System.out.println("Easy Capture has stopped.");
 		//makeVideo(System.currentTimeMillis()+".mov");
 		makeVideo("InvigilatorPC/ExamHall=1.mov");
+		
+		File f = new File(store);
+		
+		//delete the directory
+		String[] children = f.list();
+		File photo;
+        for (int i = 0; i < children.length; i++) {
+           photo = new File(f, children[i]);
+           photo.delete();
+        }
+		f.delete();
 	}
 }
