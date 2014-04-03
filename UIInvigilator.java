@@ -246,7 +246,19 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 							"Termination Reason :");    	
 					if(reason!=null){
 						//send to server to terminate userID from examHall
-						examhallMgr.terminateStudent(client, userID, examHall, reason);
+						//Confirm Terminate
+						Object[] options = {"Confirm", "Cancel"};
+                        int n = JOptionPane.showOptionDialog(null,
+                                        "Confirm exam termination.",
+                                        "SYSTEM NOTICE",
+                                        JOptionPane.YES_NO_OPTION,
+                                        JOptionPane.PLAIN_MESSAGE,
+                                        null,
+                                        options,
+                                        options[0]);
+                        if (n == JOptionPane.YES_OPTION) {
+                        	examhallMgr.terminateStudent(client, userID, examHall, reason);
+                        }
 					}
 					else{
 						//No termination
@@ -336,6 +348,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 			time.stop();
                 	}
                 	else if(code == TERMINATE){
+                		
                 		String examHallID = in.readUTF();
                 		int userID= in.readInt();
 

@@ -358,40 +358,59 @@ public class UIMenu extends JFrame implements ActionListener {
 				Component[] componentList3 = pnNorth.getComponents();
 				lblText = (JLabel)componentList3[0];
 				
-				//check if user can enter exam
-				examHall = examHallMgr.enterExamHall(user, lblText.getText());
-				if(examHall == null){
-					lblMsg.setText("Access Denied");
-					lblMsg.setForeground(Color.red);
+				//Student agree with examination rules and conducts
+				boolean enterAllow = true;
+				if(user instanceof Student){
+					//Confirm 
+					Object[] options = {"Confirm", "Cancel"};
+                    int n = JOptionPane.showOptionDialog(null,
+                                    "You are not allowed to......",
+                                    "[Examination Rules and Conduct]",
+                                    JOptionPane.YES_NO_OPTION,
+                                    JOptionPane.PLAIN_MESSAGE,
+                                    null,
+                                    options,
+                                    options[0]);
+                    if (n == JOptionPane.NO_OPTION)
+                    	enterAllow = false;
 				}
-				else{
-					//times up. access allowed
-					//connect to server
-					client = examHallMgr.connectExamHall(examHall, user);
-					if(client == null){
-						JOptionPane.showMessageDialog(null,
-                			    "Connection Fail: Invigilator has not entered / You are logged in.");
-						lblMsg.setText("Connection Fail");
+				
+				if (enterAllow){
+					//check if user can enter exam
+					examHall = examHallMgr.enterExamHall(user, lblText.getText());
+					if(examHall == null){
+						lblMsg.setText("Access Denied");
 						lblMsg.setForeground(Color.red);
 					}
 					else{
-						//launch UI for student. e.g UIStudent uiStudent = new UIStudent(User user, Socket client)
-						//each UIStudent will be able to determine which socket it belongs to.
-						if(user instanceof Student){
-							UIStudent uiStudent = new UIStudent(user, client, examHall);
-							//uiStudent.setTitle("Student Exam");
-							//uiStudent.setSize(800,600);
-							//uiStudent.setVisible(true);
-							//uiStudent.setResizable(false);
-							
+						//times up. access allowed
+						//connect to server
+						client = examHallMgr.connectExamHall(examHall, user);
+						if(client == null){
+							JOptionPane.showMessageDialog(null,
+	                			    "Connection Fail: Invigilator has not entered / You are logged in.");
+							lblMsg.setText("Connection Fail");
+							lblMsg.setForeground(Color.red);
 						}
 						else{
-							UIInvigilator uiInvigi = new UIInvigilator(user, client, examHall);
-							uiInvigi.setTitle("Invigilator");
-							uiInvigi.setExtendedState(JFrame.MAXIMIZED_BOTH);
-							uiInvigi.setVisible(true);
-							uiInvigi.setResizable(false);
-							
+							//launch UI for student. e.g UIStudent uiStudent = new UIStudent(User user, Socket client)
+							//each UIStudent will be able to determine which socket it belongs to.
+							if(user instanceof Student){
+								UIStudent uiStudent = new UIStudent(user, client, examHall);
+								//uiStudent.setTitle("Student Exam");
+								//uiStudent.setSize(800,600);
+								//uiStudent.setVisible(true);
+								//uiStudent.setResizable(false);
+								
+							}
+							else{
+								UIInvigilator uiInvigi = new UIInvigilator(user, client, examHall);
+								uiInvigi.setTitle("Invigilator");
+								uiInvigi.setExtendedState(JFrame.MAXIMIZED_BOTH);
+								uiInvigi.setVisible(true);
+								uiInvigi.setResizable(false);
+								
+							}
 						}
 					}
 				}
