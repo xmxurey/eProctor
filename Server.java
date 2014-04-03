@@ -34,6 +34,8 @@ public class Server extends Thread{
 	private final int FINISHALL = 4;
 	private final int FINISHTIMER = 5;
 	private final int TERMINATE = 6;
+	private final int SENDVIDEO = 7;
+	private final int SENDANSWER = 8;
 	
 	
 	public Server(){
@@ -157,6 +159,41 @@ public class Server extends Thread{
 	/*
 	  Finish Exam
 	 */
+	private synchronized void studentSendAnswer(String e){
+		 for (Session s : ExamHallParticipantList) {
+
+		      	if(s.getExamHallID().equals(examHallID)){
+		      		if(s.isStudent){
+			      		s.writeInt(SENDANSWER);
+			      		receiveAnswer();
+		      		}
+		      	}
+		      }
+	}
+	//receive Answer File
+	private void receiveAnswer(){
+		BufferedInputStream bis;
+		BufferedOutputStream bos;
+		byte[] data;
+		try{
+			Socket socket = new Socket("127.0.0.1", 3001);
+			FileOutputStream fos = new FileOutputStream("eProctorServer/ExamAnswerSheet/ExamHall="+examHallID+"_UserID="+userID+".txt");
+			bos = new BufferedOutputStream(fos);
+			byte[] buffer = new byte[1024];
+			int count;
+			InputStream in = socket.getInputStream();
+			while((count=in.read(buffer)) >=0){
+				fos.write(buffer, 0, count);
+			}
+			fos.close();
+			
+			socket.close();
+			
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
 	private synchronized void endTimer(int userID, String e){
 		String examHallID = e;
       for (Session s : ExamHallParticipantList) {
@@ -288,29 +325,28 @@ public class Server extends Thread{
 						endEventLog(participantList);
 						sendList(participantList);
 						
+						//transfer files from eProctor Server to NTU Server
+						//transfer eventlog
+						File eventLogSource = new File("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt");
+						File eventLogDest = new File("NTUServer/EventLog/ExamHall=" + examHallID+ ".txt");
+						transferFile(eventLogSource,eventLogDest);
+						
 						//terminate session
-
 						int userID=0;
 						for(int i=0;i<participantList.size();i++){
 							userID = (int)participantList.get(i);
 							endTimer(userID, examHallID);
 							terminateSession(userID, examHallID);
 						}
-
-						//transfer files from eProctor Server to NTU Server
-						//transfer eventlog
-						File eventLogSource = new File("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt");
-						File eventLogDest = new File("NTUServer/EventLog/ExamHall=" + examHallID+ ".txt");
-						transferFile(eventLogSource,eventLogDest);
-						/*
-						//transfer ExamAnswers
-						File examAnswerSource = new File("eProctorServer/ExamAnswer/ExamHall=" + examHallID+ ".txt");
-						File examAnswerDest = new File("NTUServer/ExamAnswer/ExamHall=" + examHallID+ ".txt");
-						sendEventLogFile(eventLogSource,eventLogDest);
-						*/
+					}
+					else if(code == SENDVIDEO){
 						//transfer Recording
-						receiveFile();
-						
+						out.writeInt(SENDVIDEO);
+						receiveVideo();
+					}
+					else if(code == SENDANSWER){
+						//transfer examanswers				
+						studentSendAnswer(examHallID);
 						
 					}
 					else if(code == TERMINATE){
@@ -427,8 +463,7 @@ public class Server extends Thread{
 	
 	        // write the message to the stream
 	        try {
-	            DataOutputStream sOutput = new DataOutputStream(client.getOutputStream());
-	            sOutput.writeInt(code);
+	            out.writeInt(code);
 	        }
 	        // if an error occurs, do not abort just inform the user
 	        catch (IOException e) {
@@ -442,8 +477,7 @@ public class Server extends Thread{
 			
 	        // write the message to the stream
 	        try {
-	            DataOutputStream sOutput = new DataOutputStream(client.getOutputStream());
-	            sOutput.writeUTF(msg);
+	            out.writeUTF(msg);
 	        }
 	        // if an error occurs, do not abort just inform the user
 	        catch (IOException e) {
@@ -477,6 +511,8 @@ public class Server extends Thread{
 		//close session
 		private void closeSession(){
 			try{
+				in.close();
+				out.close();
 				client.close();
 			}
 			catch(IOException ex){
@@ -562,19 +598,18 @@ public class Server extends Thread{
 		}
 		
 		//receive Video File
-		private void receiveFile(){
+		private void receiveVideo(){
 			BufferedInputStream bis;
 			BufferedOutputStream bos;
 			byte[] data;
 			try{
 				Socket socket = new Socket("127.0.0.1", 3000);
-				FileOutputStream fos = new FileOutputStream("eProctorServer/ExamHall=1.mov");
+				FileOutputStream fos = new FileOutputStream("eProctorServer/ExamRecording/ExamHall="+examHallID+".mov");
 				bos = new BufferedOutputStream(fos);
 				byte[] buffer = new byte[1024];
 				int count;
 				InputStream in = socket.getInputStream();
 				while((count=in.read(buffer)) >=0){
-					System.out.println("Enter file 1");
 					fos.write(buffer, 0, count);
 				}
 				fos.close();

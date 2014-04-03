@@ -10,8 +10,6 @@ import java.awt.*;
 
 public class UserManager {
 
-	private JFrame frame;
-	
 	public UserManager(){
 		
 	}
@@ -82,10 +80,9 @@ public class UserManager {
 	        	}
 	        }
 	        else{
-	        	JOptionPane.showMessageDialog(frame,
-	        		    "Username/password is incorrect. Please try again.",
-	        		    "Login Fail",
-	        		    JOptionPane.ERROR_MESSAGE);
+	        	System.out.println("Login Fail");
+	        	JOptionPane.showMessageDialog(null,
+						"Username/Password is incorrect. Please try again.", "Login Fail", JOptionPane.ERROR_MESSAGE);  
 	        	res.close();
         		st.close();
         		conn.close();

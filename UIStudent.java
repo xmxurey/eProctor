@@ -3,6 +3,8 @@ import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 import com.sun.pdfview.PagePanel;
 
+import eProctor.UIInvigilator.CountDown;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.net.Socket;
@@ -40,20 +42,27 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	private final int CONNECT = 1;
 	private final int MSG = 2;
 	private final int START = 3;
+	private final int FINISHALL = 4;
+	private final int FINISHTIMER = 5;
+	private final int TERMINATE = 6;
+	private final int SENDVIDEO = 7;
+	private final int SENDANSWER = 8;
 	
 	//timer
-//	Timer timer = new Timer();
-//    boolean timesUp = false;
+	Timer timer = new Timer();
+    boolean timesUp = false;
     long delay=0;
-    
+
+	//managers
+	private ExamHallManager examhallMgr = new ExamHallManager();
+	
 	public UIStudent(){		
 		
 	}
 	public UIStudent(User u, Socket c, ExamHall e){
 		
-		new WebcamClient().start();
-		AudioClient audioClient = new AudioClient(6002);
-		
+		//new WebcamClient().start();
+		//AudioClient audioClient = new AudioClient(6002);
 		//Start all socket connection
 		client = c;
 		user = u;	
@@ -101,8 +110,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
 
         //display pdf page
-        //pdffile = PDFDisplayManager.setup(examHall.getExamHallID());
-        //pageCount = pdffile.getNumPages();
+        pdffile = PDFDisplayManager.setup(examHall.getExamHallID());
+        pageCount = pdffile.getNumPages();
 //        page = pdffile.getPage(0);
 //        pagePanel.showPage(page);
 //
@@ -184,6 +193,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         lblTimer = new JLabel("--:--:--");
         downPanelRight.add(lblTimer);
         btnSubmit = new JButton("Submit");
+        btnSubmit.addActionListener(this);
         downPanelRight.add(btnSubmit);
 
         downPanel.add(downPanelLeft, BorderLayout.CENTER);
@@ -211,7 +221,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
             pagePanel.showPage(page);
         }
         else if (e.getSource() == btnNextPage){
-            if(pageIndex == pageCount-1);
+            if(pageIndex == pageCount-1)
+            	JOptionPane.showMessageDialog(null, "It is already the last page!");
             else{ pageIndex++;
                 page = pdffile.getPage(pageIndex);
                 pagePanel.showPage(page);
@@ -219,14 +230,28 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
             }
         }
         else if (e.getSource() == btnPreviousPage){
-            if(pageIndex == 1);
+            if(pageIndex == 1)
+            	JOptionPane.showMessageDialog(null, "It is already the first page!");
             else{
                 pageIndex--;
                 page = pdffile.getPage(pageIndex);
                 pagePanel.showPage(page);
             }
         }
-
+        else if(e.getSource() == btnSubmit){
+        	if (JOptionPane.showConfirmDialog(null, "Are you sure to submit your answer script"
+        			+ " and end the exam ?", "Request", 
+        		    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
+        		    == JOptionPane.YES_OPTION)
+        		{
+        		 //Do the request
+        		}
+        		else
+        		{
+        		 //Go back to normal
+        		}
+        	 
+        }
         try{
 			in = new DataInputStream(client.getInputStream());
 			out = new DataOutputStream(client.getOutputStream());
@@ -246,8 +271,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 		try {
             DataInputStream in = new DataInputStream(client.getInputStream());
 
-            System.out.println("New Session Started");
             int code=0;
+            Thread time = null;
             while (true) {
                 try {
                     code = in.readInt();
@@ -255,7 +280,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 	if(code == MSG){
                 		//display msg from eventlog;
                 		String msg=in.readUTF();
-
+System.out.println(msg);
                 		//txtDisplay.setText(msg);
                 		//System.out.println("entered 1");
                 		//txtDisplay.selectAll();
@@ -265,7 +290,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
-                        (new Thread(new CountDown(delay,lblTimer))).start();                        
+                		time = new Thread(new CountDown(delay));
+                		time.start();                                
                         
                         //create exam answer sheet
                         File answerSheetFile = new File("Local/ExamAnswer/ExamHall=" + examHall.getExamHallID()+ "_Userid="+user.getUserID()+".txt");
@@ -277,6 +303,14 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                         	JOptionPane.showMessageDialog(null,
                     			    "Answer sheet cannot be created.");
                         }
+                	}
+                	else if(code == SENDANSWER){
+                		//examhallMgr.saveAnswer(txtAnswer.getText(),  examHall.getExamHallID(), user.getUserID());
+                		examhallMgr.sendAnswer(client, examHall.getExamHallID(), user.getUserID());
+                	}
+                	else if(code == FINISHTIMER){
+                		if(time != null)
+                			time.stop();
                 	}
                 } catch (IOException e) {
                     System.out.println(" Exception reading Streams: " + e);
@@ -299,5 +333,40 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 //    	uiStudent.setTitle("Student Exam");
     } 
 	
+	//countdown timer
+	class CountDown implements Runnable{
+		long sec;
+		long HH;
+		long MM;
+		long SS;
+		boolean stop=false;
+		
+		public CountDown(long s){
+			sec = s;
+			
+		}
+		public void run(){
+			while(sec>=0){
 
+				SS = sec % 60;
+				MM = (sec/60) % 60;
+				HH = sec/3600;
+				try{
+					Thread.sleep(1000);
+				}
+				catch (InterruptedException x) {
+                }
+				lblTimer.setText(HH + ":" + MM + ":" + SS);
+				sec--;
+				
+			}
+			lblTimer.setText("Times Up");
+			timesUp = true;
+			
+			if(timesUp==true){
+				btnSubmit.setText("FINISH");
+				btnSubmit.setEnabled(false);
+        	}
+		}
+	}	
 }

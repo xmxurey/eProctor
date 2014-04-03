@@ -29,7 +29,6 @@ public class Audio extends JPanel implements Runnable {
                     s = ss.accept();
                     AudioPlayback player=new AudioPlayback(s);
     	            player.start();
-    	            System.out.println(port);
                 } catch (Exception e) { 
                     e.printStackTrace(); 
                 } finally {  

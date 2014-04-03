@@ -45,6 +45,8 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private final int FINISHALL = 4;
 	private final int FINISHTIMER = 5;
 	private final int TERMINATE = 6;
+	private final int SENDVIDEO = 7;
+	private final int SENDANSWER = 8;
 	
 	//managers
 	private ExamHallManager examhallMgr = new ExamHallManager();
@@ -299,11 +301,25 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
             				e1.printStackTrace();
             			}
                 		
+            			JOptionPane.showMessageDialog(null,
+            					"The recording has been saved to your computer./n"
+                        			    + "Student's Exam answers and Event Log have been sent to the server",
+                        			    "SYSTEM NOTICE", JOptionPane.PLAIN_MESSAGE);
+            			
+                	}
+                	else if(code == SENDVIDEO){
+                		try {
+            				recorder.endRecording();
+                    		//transfer file to server
+                    		//examhallMgr.sendVideo(client, examHall.getExamHallID());
+            			} catch (Exception e1) {
+            				// TODO Auto-generated catch block
+            				e1.printStackTrace();
+            			}
                 	}
                 	else if(code == FINISHALL){
                 		String examHallID = in.readUTF();
                 		int participantSize= in.readInt();
-                		System.out.println("participant Size="+ participantSize);
                 		int userID=0;                		
                 		
                 		for(int i=0;i<participantSize;i++){
@@ -314,16 +330,6 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                     		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
                 			//Terminate all server interface
                 		}
-                		
-                		try {
-            				recorder.endRecording();
-                    		//transfer file to server
-                    		examhallMgr.sendFile(client);
-            			} catch (Exception e1) {
-            				// TODO Auto-generated catch block
-            				e1.printStackTrace();
-            			}
-
                 	}
                 	else if(code == FINISHTIMER){
                 		if(time != null)

@@ -20,7 +20,8 @@ public class AudioClient extends Frame
     {
         try
         {
-        	Socket cli=new Socket("172.27.121.103",portNo);
+        	Socket cli=new Socket("127.0.0.1",portNo);
+        	//Socket cli=new Socket("172.22.120.245",portNo);
             cap=new AudioCapture(cli);
             cap.start();
         }

@@ -19,6 +19,8 @@ public class ExamHallManager implements Serializable{
 	private final int FINISHALL = 4;
 	private final int FINISHTIMER = 5;
 	private final int TERMINATE = 6;
+	private final int SENDVIDEO = 7;
+	private final int SENDANSWER = 8;
 	
 	//Connection
 	private DataInputStream in;
@@ -98,7 +100,7 @@ public class ExamHallManager implements Serializable{
 	}
 	
 	public Socket connectExamHall(ExamHall examHall, User user){
-		String serverAddr = "172.27.121.103"; 	// server host name
+		String serverAddr = "127.0.0.1"; 	// server host name
 		int portNo=2001;
 		//String serverAddr = "172.22.82.176"; 	// server host name
 		//int portNo = 2050;	     		// server port number
@@ -158,6 +160,8 @@ public class ExamHallManager implements Serializable{
 	public void finishExam(Socket c, ExamHall examHall){
 		try{
 			out = new DataOutputStream(c.getOutputStream());
+			out.writeInt(SENDVIDEO);
+			out.writeInt(SENDANSWER);
 			out.writeInt(FINISHALL);
 			
 		}
@@ -200,13 +204,13 @@ public class ExamHallManager implements Serializable{
 		}
 	}
 	
-	public void sendFile(Socket c){  
+	public void sendVideo(Socket c, String examHallID){  
 		byte[] byteArray; 
 	    BufferedInputStream bis;   
 	    BufferedOutputStream bos; 
 	    
 
-	    String fileToSend = "InvigilatorPC/ExamHall=1.mov";
+	    String fileToSend = "InvigilatorPC/ExamHall="+examHallID+".mov";
 	    
 		try{
 			ServerSocket ss = new ServerSocket(3000, 1);
@@ -229,7 +233,47 @@ public class ExamHallManager implements Serializable{
 		}
 	}
 	
+	public void saveAnswer(String answer, String examHallID, int userID){
+		try{
+			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("Local/ExamAnswer/ExamHall="+examHallID+"_userID="+userID+".txt", true)));
+			
+			writer.write(answer);
+			writer.close();
+			
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
 	
+	public void sendAnswer(Socket c, String examHallID, int userID){  
+		byte[] byteArray; 
+	    BufferedInputStream bis;   
+	    BufferedOutputStream bos; 
+	    
+
+	    String fileToSend = "Local/ExamAnswer/ExamHall="+examHallID+"_userID="+userID+".txt";
+	    
+		try{
+			ServerSocket ss = new ServerSocket(3001, 1);
+			Socket socket = ss.accept();
+
+	    	File myFile = new File(fileToSend);
+			int count;
+	    	byte[] buffer = new byte[1024];
+
+	    	OutputStream out = socket.getOutputStream();
+	    	BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
+	    	while ((count = in.read(buffer)) >= 0) {
+	    	     out.write(buffer, 0, count);
+	    	     out.flush();
+	    	}
+			socket.close();
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
 	
 	
 }
