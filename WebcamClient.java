@@ -1,5 +1,4 @@
 package eProctor;
-
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -18,6 +17,7 @@ public class WebcamClient extends Thread {
    private Dimension screenSize; 
    private Rectangle rectangle; 
    private Robot robot; 
+   private Thread cam;
    
 
    public WebcamClient() { 
@@ -29,6 +29,8 @@ public class WebcamClient extends Thread {
             e.printStackTrace(); 
             System.out.println(e); 
         } 
+       cam = new Thread();
+       cam.start();
     } 
  
     public void run() { 
@@ -36,8 +38,8 @@ public class WebcamClient extends Thread {
         Socket socket = null; 
         while (true) { 
             try { 
-                socket = new Socket("127.0.0.1", 5000);
-                //socket = new Socket("172.27.120.245", 5000);
+                //socket = new Socket("127.0.0.1", 5000);
+                socket = new Socket(Protocol.webcamAddr, Protocol.webcamPort);
                 BufferedImage image = robot.createScreenCapture(rectangle); 
                 
                 int width = image.getWidth();
@@ -75,6 +77,11 @@ public class WebcamClient extends Thread {
         } 
     } 
  
+    public void camStop(){
+    	if(cam != null){
+    		cam.stop();
+    	}
+    }
     public static void main(String[] args) { 
         new WebcamClient().start(); 
     } 

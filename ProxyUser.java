@@ -1,5 +1,4 @@
 package eProctor;
-
 public class ProxyUser {
 	private User user = null;
 	private int userID;

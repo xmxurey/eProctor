@@ -24,29 +24,21 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private JLabel lblMsg, lblTimer,lblBackground;
 	private JButton btnStartStop, btnTerminate;
 	private JTextField txtMsg;
-	private JTextArea txtDisplay;
-	private String displayText;	
+	private JTextArea eventLogArea = new JTextArea();;
+
 	private JScrollPane downScrollPane;
 	private JComboBox ddlTerminate;
 	private JLayeredPane layeredPane;
 	private ImageIcon background = new ImageIcon("images/Invigilatorbg.jpg");
 	private ImageIcon startButton = new ImageIcon("Images/invstartexam1.png");
 	private ImageIcon finishButton = new ImageIcon("Images/endexam1.png");
-	private ImageIcon terminate= new ImageIcon("Images/login1.png");
+	private ImageIcon terminate= new ImageIcon("Images/terminatestudent1.png");
 	
 	private Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 	
 	private Screen[] student;
 	private Audio[] audio;
-	//Communication Protocol
-	private final int CONNECT = 1;
-	private final int MSG = 2;
-	private final int START = 3;
-	private final int FINISHALL = 4;
-	private final int FINISHTIMER = 5;
-	private final int TERMINATE = 6;
-	private final int SENDVIDEO = 7;
-	private final int SENDANSWER = 8;
+
 	
 	//managers
 	private ExamHallManager examhallMgr = new ExamHallManager();
@@ -63,19 +55,18 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
   	private Recorder recorder;
 	
 	public UIInvigilator(){
-		
 	}
 	public UIInvigilator(User u, Socket c, ExamHall e){
 		
 		//Start all socket connection
 		client = c;
-		user = u;	
+		this.user = u;
 		examHall = e;
 
 		Thread t = new Thread(this);
    		t.start(); 
    		
-   		Container container = getContentPane();
+Container container = getContentPane();
 		
 		//layeredPane settings
 		layeredPane = new JLayeredPane();
@@ -114,13 +105,12 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	
 		//creating taDisplay
 		Color color=new Color(244,254,232,69);
-		txtDisplay = new JTextArea(displayText);
-		txtDisplay.setFont(new Font("Verdana", Font.BOLD, 12));
-		txtDisplay.setForeground(Color.BLACK);
-		txtDisplay.setEnabled(false);
-		txtDisplay.setBackground(color);
+
+		eventLogArea.setFont(new Font("Verdana", Font.BOLD, 12));
+		eventLogArea.setForeground(Color.BLACK);
+		eventLogArea.setEnabled(false);
 		
-		downScrollPane = new JScrollPane(txtDisplay);
+		downScrollPane = new JScrollPane(eventLogArea);
 		downScrollPane.setBackground(color);
 		downScrollPane.setPreferredSize(new Dimension(d.width-150,100));
 		
@@ -202,7 +192,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 			out = new DataOutputStream(client.getOutputStream());
 			if (e.getSource() == txtMsg){
 				//send code to server informing a msg is send + its msg text
-				out.writeInt(MSG);
+				out.writeInt(Protocol.MSG);
 				out.writeUTF(txtMsg.getText());
 				txtMsg.setText("");
 			}
@@ -220,9 +210,11 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 					        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
 							//btnStartStop.setEnabled(false);
 							//start exam
-							out.writeInt(START);
+							out.writeInt(Protocol.START);
 						}
-						
+						else{
+							JOptionPane.showMessageDialog(null, "You cannot start the exam before its scheduled time");
+						}
 					}
 					else if (btnImage.equals(finishButton.toString())){
 						//stop exam
@@ -239,26 +231,20 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 				else if (btnImage.equals(terminate.toString())){
 					//get user ID
 					String uID = (String)ddlTerminate.getSelectedItem();
-					int userID = Integer.parseInt(uID);
+					int terminateID = Integer.parseInt(uID);
 					
 					//pop out message box for reason of termination
 					String reason = JOptionPane.showInputDialog(null,
 							"Termination Reason :");    	
 					if(reason!=null){
-						//send to server to terminate userID from examHall
 						//Confirm Terminate
 						Object[] options = {"Confirm", "Cancel"};
-                        int n = JOptionPane.showOptionDialog(null,
-                                        "Confirm exam termination.",
-                                        "SYSTEM NOTICE",
-                                        JOptionPane.YES_NO_OPTION,
-                                        JOptionPane.PLAIN_MESSAGE,
-                                        null,
-                                        options,
-                                        options[0]);
-                        if (n == JOptionPane.YES_OPTION) {
-                        	examhallMgr.terminateStudent(client, userID, examHall, reason);
-                        }
+						int n = JOptionPane.showOptionDialog(null, "Confirm Exam Termination", "SYSTEM NOTICE", JOptionPane.YES_NO_OPTION,
+								JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+						if (n == JOptionPane.YES_OPTION){
+						//send to server to terminate userID from examHall
+						examhallMgr.terminateStudent(client, terminateID, examHall, reason);
+						}
 					}
 					else{
 						//No termination
@@ -286,23 +272,26 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 	code = in.readInt();
                 	
                 	
-                	if(code == CONNECT){
+                	if(code == Protocol.CONNECT){
                 		int userID = in.readInt();
                 		studentList.add(""+userID);
                 		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
                 	}
-                	else if(code == MSG){
+                	else if(code == Protocol.MSG){
                 		//display msg from eventlog
                 		String msg=in.readUTF();
-                		txtDisplay.setText(msg);
-                		txtDisplay.selectAll();
+                		eventLogArea.setText(msg);
+                		eventLogArea.selectAll();
                 	}
-                	else if(code == START){
+                	else if(code == Protocol.START){
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
                 		time = new Thread(new CountDown(delay));
-                		time.start();                		
+                		time.start();
+                		
+                		//get exam paper
+                		
                 		
                 		//start Recording
                 		recorder = new Recorder();
@@ -312,28 +301,31 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
             				// TODO Auto-generated catch block
             				e1.printStackTrace();
             			}
-            			
+                		
+            			//display start message
+				        JOptionPane.showMessageDialog(null,
+                			    "Exam has started");
                 	}
-                	else if(code == SENDVIDEO){
+                	else if(code == Protocol.ALLSENDVIDEO){
                 		try {
-            				recorder.endRecording();
+            				recorder.endRecording(examHall.getExamHallID());
                     		//transfer file to server
-                    		//examhallMgr.sendVideo(client, examHall.getExamHallID());
+                    		examhallMgr.sendVideo(client, examHall.getExamHallID());
             			} catch (Exception e1) {
             				// TODO Auto-generated catch block
             				e1.printStackTrace();
             			}
                 		
-                		JOptionPane.showMessageDialog(null,
-            					"The recording has been saved to your computer.\n"
-                        			    + "Student's Exam answers and Event Log have been sent to the server",
-                        			    "SYSTEM NOTICE", JOptionPane.PLAIN_MESSAGE);
+                		JOptionPane.showMessageDialog(null, "The Recording has been saved to your computer.\n"
+                							+"Student's Exam answers and Event log have been sent to the server.",
+                							"SYSTEM NOTICE",JOptionPane.PLAIN_MESSAGE);
+                		
                 	}
-                	else if(code == FINISHALL){
+                	else if(code == Protocol.FINISHALL){
                 		String examHallID = in.readUTF();
                 		int participantSize= in.readInt();
-                		int userID=0;                		
                 		
+                		int userID=0;
                 		for(int i=0;i<participantSize;i++){
                 			userID = in.readInt();
                 			
@@ -342,13 +334,16 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                     		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
                 			//Terminate all server interface
                 		}
+                		//display start message
+				        JOptionPane.showMessageDialog(null,
+                			    "Exam has Ended");
+
                 	}
-                	else if(code == FINISHTIMER){
+                	else if(code == Protocol.FINISHTIMER){
                 		if(time != null)
                 			time.stop();
                 	}
-                	else if(code == TERMINATE){
-                		
+                	else if(code == Protocol.STUDENTREMOVAL){
                 		String examHallID = in.readUTF();
                 		int userID= in.readInt();
 
@@ -363,7 +358,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
                 		
 						//display terminate success message	
                 		JOptionPane.showMessageDialog(null,
-                			    "Student has been terminated.");
+                			    "Student has been removed from examHall.");
                 	}
                 } 
                 catch (IOException e) {

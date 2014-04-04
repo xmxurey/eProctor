@@ -1,5 +1,4 @@
 package eProctor;
-
 import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,8 +19,7 @@ public class AudioClient extends Frame
     {
         try
         {
-        	Socket cli=new Socket("127.0.0.1",portNo);
-        	//Socket cli=new Socket("172.22.120.245",portNo);
+        	Socket cli=new Socket(Protocol.audioAddr,portNo);
             cap=new AudioCapture(cli);
             cap.start();
         }
@@ -29,6 +27,11 @@ public class AudioClient extends Frame
         {}
     }
     
+    public void audioStop(){
+    	if(cap != null){
+    		cap.stop();
+    	}
+    }
     public static void main(String[] args)
     {
     	AudioClient client = new AudioClient(6002);

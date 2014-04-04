@@ -80,9 +80,7 @@ public class UserManager {
 	        	}
 	        }
 	        else{
-	        	System.out.println("Login Fail");
-	        	JOptionPane.showMessageDialog(null,
-						"Username/Password is incorrect. Please try again.", "Login Fail", JOptionPane.ERROR_MESSAGE);  
+	        	JOptionPane.showMessageDialog(null, "Username/Password is incorrect. Please try again.","Login Fail",JOptionPane.ERROR_MESSAGE);
 	        	res.close();
         		st.close();
         		conn.close();

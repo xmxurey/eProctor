@@ -1,5 +1,4 @@
 package eProctor;
-
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -127,11 +126,10 @@ public class Recorder {
 		.println("\nEasy Capture is recording now!!!!!!!");
 	}
 	
-	public void endRecording() throws Exception {
+	public void endRecording(String examHallID) throws Exception {
 		record = false;
 		System.out.println("Easy Capture has stopped.");
-		//makeVideo(System.currentTimeMillis()+".mov");
-		makeVideo("InvigilatorPC/ExamHall=1.mov");
+		makeVideo("Local/ExamRecording/ExamHall="+examHallID+".mov");
 		
 		File f = new File(store);
 		

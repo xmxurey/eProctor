@@ -1,5 +1,4 @@
 package eProctor;
-
 import javax.swing.*;
 
 public class FunctionButton extends JButton{

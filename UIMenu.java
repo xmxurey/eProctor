@@ -1,5 +1,4 @@
 package eProctor;
-
 import java.util.*;
 import java.awt.*;
 
@@ -360,21 +359,15 @@ public class UIMenu extends JFrame implements ActionListener {
 				
 				//Student agree with examination rules and conducts
 				boolean enterAllow = true;
-				if(user instanceof Student){
-					//Confirm 
+				if (user instanceof Student){
 					Object[] options = {"Confirm", "Cancel"};
-                    int n = JOptionPane.showOptionDialog(null,
-                                    "You are not allowed to......",
-                                    "[Examination Rules and Conduct]",
-                                    JOptionPane.YES_NO_OPTION,
-                                    JOptionPane.PLAIN_MESSAGE,
-                                    null,
-                                    options,
-                                    options[0]);
-                    if (n == JOptionPane.NO_OPTION)
-                    	enterAllow = false;
+					int n = JOptionPane.showOptionDialog(null, "Upon entering the examination room you are subject to examination regulations "
+							+ "and you must comply with all instructions given by an invigilator before, "
+							+ "during and after your examination.", "[Examination Rules and Conduct]", JOptionPane.YES_NO_OPTION,
+							JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+					if (n==JOptionPane.NO_OPTION)
+						enterAllow = false;
 				}
-				
 				if (enterAllow){
 					//check if user can enter exam
 					examHall = examHallMgr.enterExamHall(user, lblText.getText());
@@ -396,11 +389,12 @@ public class UIMenu extends JFrame implements ActionListener {
 							//launch UI for student. e.g UIStudent uiStudent = new UIStudent(User user, Socket client)
 							//each UIStudent will be able to determine which socket it belongs to.
 							if(user instanceof Student){
+								
 								UIStudent uiStudent = new UIStudent(user, client, examHall);
-								//uiStudent.setTitle("Student Exam");
-								//uiStudent.setSize(800,600);
-								//uiStudent.setVisible(true);
-								//uiStudent.setResizable(false);
+								uiStudent.setTitle("Student Exam");
+	                            uiStudent.setExtendedState(JFrame.MAXIMIZED_BOTH);
+								uiStudent.setVisible(true);
+								uiStudent.setResizable(false);
 								
 							}
 							else{

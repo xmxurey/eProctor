@@ -1,5 +1,7 @@
 package eProctor;
+
 import java.io.*;
+
 import java.net.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,15 +10,9 @@ import java.sql.Statement;
 import java.util.*;
 import java.text.*;
 import java.nio.file.Files;
-
-
-
-
-
 import javax.swing.*;
 
 public class Server extends Thread{
-	int port = 2001;  
 	int connectors = 50;
 	Socket client;
 	DataInputStream in;
@@ -26,17 +22,7 @@ public class Server extends Thread{
 	int userID;
 	boolean isStudent;
 	ArrayList<Session> ExamHallParticipantList;
-	
-	//Communication Protocol
-	private final int CONNECT = 1;
-	private final int MSG = 2;
-	private final int START = 3;
-	private final int FINISHALL = 4;
-	private final int FINISHTIMER = 5;
-	private final int TERMINATE = 6;
-	private final int SENDVIDEO = 7;
-	private final int SENDANSWER = 8;
-	
+
 	
 	public Server(){
 		ExamHallParticipantList = new ArrayList();
@@ -44,7 +30,7 @@ public class Server extends Thread{
 	
 	public void run() {
 		try{
-			ServerSocket ss = new ServerSocket(port, connectors);
+			ServerSocket ss = new ServerSocket(Protocol.serverPortNo, connectors);
     		System.out.println("Waiting for client connection .. ");
 
     		boolean allow=false;
@@ -71,7 +57,7 @@ public class Server extends Thread{
 			}
 		}
 		catch(Exception e){
-			System.out.println("Could not listen on port: "+port+".");
+			System.out.println("Could not listen on port: "+Protocol.serverPortNo+".");
 
 		}
     }
@@ -108,7 +94,7 @@ public class Server extends Thread{
 			if(s.getExamHallID().equals(examHallID)){
 				if(s.isStudent == false){
 					//isInvigilator
-					s.writeInt(CONNECT);
+					s.writeInt(Protocol.CONNECT);
 					s.writeInt(userID);
 				}
 			}
@@ -122,7 +108,7 @@ public class Server extends Thread{
         for (Session s : ExamHallParticipantList) {
             
         	if(s.getExamHallID().equals(examHallID)){
-        		s.writeInt(MSG);
+        		s.writeInt(Protocol.MSG);
         		try {
 	        		BufferedReader bIn = new BufferedReader(new FileReader("eProctorServer/EventLog/ExamHall=" + examHallID + ".txt"));
 	        		String msg="";
@@ -151,7 +137,7 @@ public class Server extends Thread{
         for (Session s : ExamHallParticipantList) {
             
         	if(s.getExamHallID().equals(examHallID)){
-        		s.writeInt(START);
+        		s.writeInt(Protocol.START);
         	}
         }
     }
@@ -159,16 +145,25 @@ public class Server extends Thread{
 	/*
 	  Finish Exam
 	 */
-	private synchronized void studentSendAnswer(String e){
-		 for (Session s : ExamHallParticipantList) {
+	private synchronized void endTimer(int userID, String e){
+		String examHallID = e;
+      for (Session s : ExamHallParticipantList) {
 
+      	if(s.getExamHallID().equals(examHallID) && userID == s.getUserID()){
+      		s.writeInt(Protocol.FINISHTIMER);
+      	}
+      }
+	}
+	private synchronized void allSendAnswer(String e){
+		for(int i=0;i<ExamHallParticipantList.size();i++){
+			Session s = (Session)ExamHallParticipantList.get(i);
 		      	if(s.getExamHallID().equals(examHallID)){
 		      		if(s.isStudent){
-			      		s.writeInt(SENDANSWER);
+			      		s.writeInt(Protocol.ALLSENDANSWER);
 			      		receiveAnswer();
 		      		}
 		      	}
-		      }
+		}
 	}
 	//receive Answer File
 	private void receiveAnswer(){
@@ -176,13 +171,16 @@ public class Server extends Thread{
 		BufferedOutputStream bos;
 		byte[] data;
 		try{
-			Socket socket = new Socket("127.0.0.1", 3001);
+			ServerSocket ss = new ServerSocket(Protocol.answerTransferPort, 1);
+			Socket socket = ss.accept();
+			
 			FileOutputStream fos = new FileOutputStream("eProctorServer/ExamAnswerSheet/ExamHall="+examHallID+"_UserID="+userID+".txt");
 			bos = new BufferedOutputStream(fos);
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[2022386];
 			int count;
 			InputStream in = socket.getInputStream();
 			while((count=in.read(buffer)) >=0){
+
 				fos.write(buffer, 0, count);
 			}
 			fos.close();
@@ -194,26 +192,43 @@ public class Server extends Thread{
 			ex.printStackTrace();
 		}
 	}
-	private synchronized void endTimer(int userID, String e){
-		String examHallID = e;
-      for (Session s : ExamHallParticipantList) {
-
-      	if(s.getExamHallID().equals(examHallID) && userID == s.getUserID()){
-      		s.writeInt(FINISHTIMER);
-      	}
-      }
-	}
-	
 	//terminate client session
 	private synchronized void terminateSession(int userID, String examHallID){
+		Iterator<Session> ite = ExamHallParticipantList.iterator();
+		
+		while(ite.hasNext()){
+			Session s = ite.next();
+			if(s.getExamHallID().equals(examHallID) && userID == s.getUserID()){
+
+        		System.out.println("Session for UserID="+s.userID+" has ended.");
+        		if(s.isStudent){
+        			s.writeInt(Protocol.TERMINATESERVER);
+        		}
+        		
+        		ite.remove();
+        		s.closeSession();
+        	}
+		}
 		for (Session s : ExamHallParticipantList) {
             
         	if(s.getExamHallID().equals(examHallID) && userID == s.getUserID()){
 
         		System.out.println("Session for UserID="+s.userID+" has ended.");
         		s.closeSession();
+        		ExamHallParticipantList.remove(s);
         	}
         }
+	}
+	
+	private synchronized void endStudent(int userID, String examHallID){
+		for (Session s : ExamHallParticipantList) {
+			if(s.examHallID.equals(examHallID) && !s.isStudent){
+				s.writeInt(Protocol.STUDENTREMOVAL);
+            	s.writeUTF(examHallID);
+            	s.writeInt(userID);
+            	break;
+			}
+		}
 	}
 	
 	/*
@@ -280,25 +295,26 @@ public class Server extends Thread{
 				while(true){
 					int code = in.readInt();
 					
-					if(code == CONNECT){
+					if(code == Protocol.CONNECT){
 
 						connectExam(examHallID, userID, isStudent);
 			    		connectInvExam(examHallID, userID);
 						
-			    		
 						System.out.println("UserID = " + userID + " has entered examHallID= "+examHallID);
 						
-						//transfer only if it is invigilator who enters examhall
-						
-
-			    		if(!isStudent){
-			    			File examQuestionPaperSource = new File("ntuserver/ExamQuestion/ExamHall=" + examHallID+ ".pdf");
-					        File examQuestionPaperDest = new File("eproctorServer/ExamQuestion/ExamHall=" + examHallID+ ".pdf");
+						if(!isStudent){
+							File examQuestionPaperSource = new File("ntuserver/ExamQuestion/ExamHall=" + examHallID+ ".pdf");
+					        File examQuestionPaperDest = new File("eProctorServer/ExamQuestion/ExamHall=" + examHallID+ ".pdf");
 					        transferFile(examQuestionPaperSource, examQuestionPaperDest);
-			    		}
-					    
+						}
+						else if(isStudent){
+							sendQuestion();
+						}
 					}
-					else if (code == MSG){
+					else if (code == Protocol.RECEIVEQUESTION){
+						sendQuestion();
+					}
+					else if (code == Protocol.MSG){
 						String msg = in.readUTF();
 						
 						//get userName
@@ -312,18 +328,22 @@ public class Server extends Thread{
 						sendMsg(msg, name);
 						
 					}
-					else if(code == START){
+					else if(code == Protocol.START){
 						startExam(getExamHallID());
 						startEventLog();
 						
 					}
-					else if(code == FINISHALL){
+					else if(code == Protocol.FINISHALL){
 						//send list of students in examhall back to examhallManager
 						ArrayList participantList = new ArrayList();
 						participantList = getStudentExamList(getExamHallID());
 						
-						endEventLog(participantList);
-						sendList(participantList);
+						int uID=0;
+						for(int i=0;i<participantList.size();i++){
+							uID = (Integer)participantList.get(i);
+							
+							endEventLog(uID, true);
+						}
 						
 						//transfer files from eProctor Server to NTU Server
 						//transfer eventlog
@@ -331,32 +351,41 @@ public class Server extends Thread{
 						File eventLogDest = new File("NTUServer/EventLog/ExamHall=" + examHallID+ ".txt");
 						transferFile(eventLogSource,eventLogDest);
 						
-						//terminate session
+						sendList(participantList);
+						
+						//terminate Timer
 						int userID=0;
 						for(int i=0;i<participantList.size();i++){
-							userID = (int)participantList.get(i);
+							userID = (Integer)participantList.get(i);
 							endTimer(userID, examHallID);
+						}
+						
+						//terminate session
+						for(int i=0;i<participantList.size();i++){
+							userID = (Integer)participantList.get(i);
 							terminateSession(userID, examHallID);
 						}
-					}
-					else if(code == SENDVIDEO){
-						//transfer Recording
-						out.writeInt(SENDVIDEO);
-						receiveVideo();
-					}
-					else if(code == SENDANSWER){
-						//transfer examanswers				
-						studentSendAnswer(examHallID);
+						
 						
 					}
-					else if(code == TERMINATE){
+					else if(code == Protocol.ALLSENDVIDEO){
+						//transfer Recording
+						out.writeInt(Protocol.ALLSENDVIDEO);
+						receiveVideo();
+					}
+					else if(code == Protocol.ALLSENDANSWER){
+						//transfer examanswers			
+						allSendAnswer(examHallID);
+						
+					}
+					else if(code == Protocol.STUDENTREMOVAL){
 
 						String examID = in.readUTF();
 						int uID = in.readInt();
 						String reason = in.readUTF();
 						
 						//get name of student
-						ResultSet res = st.executeQuery("SELECT user.Name from user where userID='" + userID + "'");
+						ResultSet res = st.executeQuery("SELECT user.Name from user where userID='" + uID + "'");
 						
 						String name="";
 						
@@ -366,18 +395,35 @@ public class Server extends Thread{
 						terminateEventLog(reason, name);
 						
 						
-						out.writeInt(TERMINATE);
-		            	out.writeUTF(examID);
-		            	out.writeInt(uID);
+						endStudent(uID, examID);
 						
+						endTimer(uID, examHallID);
+						terminateSession(uID, examID);						
+					}
+					else if(code == Protocol.STUDENTSENDANSWER){
+						studentSendAnswer(examHallID, userID);
+					}
+					else if(code == Protocol.FINISH){
+						//send list of students in examhall back to examhallManager
+						ArrayList participantList = new ArrayList();
+						
+						endEventLog(userID, false);
+						
+						endStudent(userID, examHallID);
+						
+						//terminate Timer
 						endTimer(userID, examHallID);
-						terminateSession(uID, examID);
+						
+						//terminate session
+						terminateSession(userID, examHallID);
+						
+						
 					}
 				}
 				
 			}
 			catch (IOException e){ 
-	        	e.printStackTrace();
+				System.out.println("IO Error: "+e.toString());
 			}
 	        catch (Exception e) {
 	        	e.printStackTrace();
@@ -392,10 +438,6 @@ public class Server extends Thread{
 				Class.forName(driver);
 		        Connection conn = DriverManager.getConnection(url+dbName+username+password);
 		        Statement st = conn.createStatement();
-				//update database set connect =1
-				if(isStudent == true){
-					st.execute("UPDATE ModuleAttendance SET Connected = '1' WHERE ExamHallID = '" + examHallID + "' and userID='"+ userID + "'");
-				}
 				
 				//get userName
 				ResultSet res = st.executeQuery("SELECT user.Name from user where userID='" + userID + "'");
@@ -413,7 +455,6 @@ public class Server extends Thread{
 					eventLogID = res.getInt("eventLogID");
 				}
 				PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt", true)));
-			
 				if(eventLogID<=0){
 					//no eventlog exist. Need to create eventlog
 					DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -432,8 +473,35 @@ public class Server extends Thread{
 			}
 		}
 		
-			
-		
+		//send Question File
+		private void sendQuestion(){
+			BufferedInputStream bis;
+			BufferedOutputStream bos;
+			byte[] data;
+			try{
+				ServerSocket ss = new ServerSocket(Protocol.questionTransferPort, 1);
+				out.writeInt(Protocol.RECEIVEQUESTION);
+				Socket socket = ss.accept();
+				
+				String fileToSend = "eProctorServer/ExamQuestion/ExamHall="+examHallID+".pdf";
+				File myFile = new File(fileToSend);
+				
+				int count;
+		    	byte[] buffer = new byte[2022386];
+
+		    	OutputStream out = socket.getOutputStream();
+		    	BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
+		    	while ((count = in.read(buffer)) >= 0) {
+		    	     out.write(buffer, 0, count);
+		    	     out.flush();
+		    	}
+				socket.close();
+				
+			}
+			catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
 		/*
 		  Communication during exam
 		 */
@@ -463,7 +531,8 @@ public class Server extends Thread{
 	
 	        // write the message to the stream
 	        try {
-	            out.writeInt(code);
+	            DataOutputStream sOutput = new DataOutputStream(client.getOutputStream());
+	            sOutput.writeInt(code);
 	        }
 	        // if an error occurs, do not abort just inform the user
 	        catch (IOException e) {
@@ -477,7 +546,8 @@ public class Server extends Thread{
 			
 	        // write the message to the stream
 	        try {
-	            out.writeUTF(msg);
+	            DataOutputStream sOutput = new DataOutputStream(client.getOutputStream());
+	            sOutput.writeUTF(msg);
 	        }
 	        // if an error occurs, do not abort just inform the user
 	        catch (IOException e) {
@@ -519,82 +589,17 @@ public class Server extends Thread{
 				ex.printStackTrace();
 			}
 		}
-		
-		//send to invigilator participantList
-		private void sendList(ArrayList participantList){
-			try {
-	            DataOutputStream out = new DataOutputStream(client.getOutputStream());
-	            int userID=0;
+		//student send answer to server
 
-	            out.writeInt(FINISHALL);
-            	out.writeUTF(examHallID);
-            	out.writeInt(participantList.size());
-            	
-	            for(int i=0;i<participantList.size();i++){
-	            	userID = (int)participantList.get(i);
-	            	out.writeInt(userID);
-	            }
-	        }
-			// if an error occurs, do not abort just inform the user
-	        catch (IOException e) {
-	            System.out.println("Error sending participantList");
-	        }
-		}
-	
-		//update eventlog
-		private void endEventLog(ArrayList participantList){
+		public void studentSendAnswer(String examHallID, int userID){	
 			try{
-				//update eventlog for students whole takable = 1
-				//check if user can enter examhall
-				String url = "jdbc:mysql://localhost:3306/";
-				String dbName = "cz2006?";
-				String driver = "com.mysql.jdbc.Driver";
-				String username = "user=root&";
-				String password = "password=pass";
-				
-				Class.forName(driver);
-		        Connection conn = DriverManager.getConnection(url+dbName+username+password);
-		        Statement st = conn.createStatement();
-		        
-		        int userID=0;
-		        PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID + ".txt", true)));
-		        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-				Calendar cal = Calendar.getInstance();
-				
-		        for(int i=0;i<participantList.size();i++){
-	            	userID = (int)participantList.get(i);
-
-	            	ResultSet res = st.executeQuery("select user.name, moduleAttendance.takable from moduleAttendance inner join User on User.userID = moduleattendance.userID " +
-			    	        "WHERE moduleAttendance.userID='"+userID+"' and moduleAttendance.examHallID='"+examHallID+"'");
-		        	
-			        int takable=0;
-			        String name="";
-			        while(res.next()){
-			        	takable = res.getInt("takable");
-			        	name = res.getString("name");
-			        }
-			        
-			        if(takable==1){
-						writer.println(name+ " has finished exam at "+cal.getTime()+".");
-			        }
-					
-	            }
-		        
-				writer.println("ExamHallID = " + examHallID + " has officially ended at "+cal.getTime()+".");
-				writer.close();
-		        				
+				out.writeInt(Protocol.STUDENTSENDANSWER);
+	      		receiveAnswer();
 			}
 			catch(IOException ex){
 				ex.printStackTrace();
 			}
-			catch(Exception ex){
-				ex.printStackTrace();
-			}
-		}
-		
-		//Send files to server
-		private void transferFile(File source, File dest)throws IOException{
-			Files.copy(source.toPath(), dest.toPath());
+	      		
 		}
 		
 		//receive Video File
@@ -603,10 +608,12 @@ public class Server extends Thread{
 			BufferedOutputStream bos;
 			byte[] data;
 			try{
-				Socket socket = new Socket("127.0.0.1", 3000);
+				ServerSocket ss = new ServerSocket(Protocol.videoTransferPort, 1);
+				Socket socket = ss.accept();
+				
 				FileOutputStream fos = new FileOutputStream("eProctorServer/ExamRecording/ExamHall="+examHallID+".mov");
 				bos = new BufferedOutputStream(fos);
-				byte[] buffer = new byte[1024];
+				byte[] buffer = new byte[2022386];
 				int count;
 				InputStream in = socket.getInputStream();
 				while((count=in.read(buffer)) >=0){
@@ -620,6 +627,79 @@ public class Server extends Thread{
 			catch(Exception ex){
 				ex.printStackTrace();
 			}
+		}
+		//send to invigilator participantList
+		private void sendList(ArrayList participantList){
+			try {
+	            DataOutputStream out = new DataOutputStream(client.getOutputStream());
+	            int userID=0;
+
+	            out.writeInt(Protocol.FINISHALL);
+            	out.writeUTF(examHallID);
+            	out.writeInt(participantList.size());
+            	
+	            for(int i=0;i<participantList.size();i++){
+	            	userID = (Integer)participantList.get(i);
+	            	out.writeInt(userID);
+	            }
+	        }
+			// if an error occurs, do not abort just inform the user
+	        catch (IOException e) {
+	            System.out.println("Error sending participantList");
+	        }
+		}
+	
+		//update eventlog
+		private void endEventLog(int userID, boolean examHallEnd){
+			try{
+				//update eventlog for students whole takable = 1
+				//check if user can enter examhall
+				String url = "jdbc:mysql://localhost:3306/";
+				String dbName = "cz2006?";
+				String driver = "com.mysql.jdbc.Driver";
+				String username = "user=root&";
+				String password = "password=pass";
+				
+				Class.forName(driver);
+		        Connection conn = DriverManager.getConnection(url+dbName+username+password);
+		        Statement st = conn.createStatement();
+		        
+		        
+		        PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID + ".txt", true)));
+		        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				Calendar cal = Calendar.getInstance();
+
+            	ResultSet res = st.executeQuery("select user.name, moduleAttendance.takable from moduleAttendance inner join User on User.userID = moduleattendance.userID " +
+		    	        "WHERE moduleAttendance.userID='"+userID+"' and moduleAttendance.examHallID='"+examHallID+"'");
+	        	
+		        int takable=0;
+		        String name="";
+		        while(res.next()){
+		        	takable = res.getInt("takable");
+		        	name = res.getString("name");
+		        }
+		        
+		        if(takable==1){
+					writer.println(name+ " has finished exam at "+cal.getTime()+".");
+		        }
+		        if(examHallEnd)
+		        	writer.println("ExamHallID = " + examHallID + " has officially ended at "+cal.getTime()+".");
+				writer.close();
+				
+				broadcast(examHallID);
+		        				
+			}
+			catch(IOException ex){
+				ex.printStackTrace();
+			}
+			catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
+		
+		//Send files to server
+		private void transferFile(File source, File dest)throws IOException{
+			Files.copy(source.toPath(), dest.toPath());
 		}
 		
 		/*

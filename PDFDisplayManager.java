@@ -1,5 +1,4 @@
 package eProctor;
-
 import com.sun.pdfview.PDFFile;
 
 import com.sun.pdfview.PDFPage;
@@ -29,7 +28,7 @@ public class PDFDisplayManager{
 //            frame.setVisible(true);
 //
             //load a pdf from a byte buffer
-            File file = new File("eProctorServer/ExamQuestion/ExamHall="+examHallID+".pdf");
+            File file = new File("Local/ExamQuestion/ExamHall="+examHallID+".pdf");
             RandomAccessFile raf = new RandomAccessFile(file, "r");
             FileChannel channel = raf.getChannel();
             ByteBuffer buf = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
@@ -50,8 +49,7 @@ public class PDFDisplayManager{
     }
 
     public static void main(String[] args) {
-    	String examHallID="";
-        PDFDisplayManager.setup(examHallID);
+        //PDFDisplayManager.setup();
 
     }
 }

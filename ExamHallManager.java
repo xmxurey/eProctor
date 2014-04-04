@@ -12,15 +12,6 @@ import javax.swing.*;
 
 public class ExamHallManager implements Serializable{
 	
-	//Communication Protocol
-	private final int CONNECT = 1;
-	private final int MSG = 2;
-	private final int START = 3;
-	private final int FINISHALL = 4;
-	private final int FINISHTIMER = 5;
-	private final int TERMINATE = 6;
-	private final int SENDVIDEO = 7;
-	private final int SENDANSWER = 8;
 	
 	//Connection
 	private DataInputStream in;
@@ -88,7 +79,7 @@ public class ExamHallManager implements Serializable{
 	        	examHall = new ExamHall(examSlot, examHallID, null);
 	        }
 	        else{
-	        	System.out.println("Access Denied. Time has not reached");
+	        	JOptionPane.showMessageDialog(null, "You cannot enter the exam hall because it is 20 minutes before the start of the exam");
 	        }
 	        
         }
@@ -100,10 +91,8 @@ public class ExamHallManager implements Serializable{
 	}
 	
 	public Socket connectExamHall(ExamHall examHall, User user){
-		String serverAddr = "127.0.0.1"; 	// server host name
-		int portNo=2001;
-		//String serverAddr = "172.22.82.176"; 	// server host name
-		//int portNo = 2050;	     		// server port number
+		String serverAddr = Protocol.serverAddr; 	// server host name
+		int portNo=Protocol.serverPortNo;
 		try {
 	  			// S1 - create a socket to connect to server      
 			
@@ -120,7 +109,7 @@ public class ExamHallManager implements Serializable{
 			boolean allow=false;
 			allow = in.readBoolean();
 			if(allow){
-				out.writeInt(CONNECT);
+				out.writeInt(Protocol.CONNECT);
 			}
 			else{
 				con = null;
@@ -138,16 +127,41 @@ public class ExamHallManager implements Serializable{
 		return null;
 	}
 
+	public void receiveQuestion(Socket client, ExamHall examHall){
+		byte[] byteArray; 
+	    BufferedInputStream bis;   
+	    BufferedOutputStream bos; 
+	    
+		try{
+			Socket socket = new Socket(Protocol.transferAddr, Protocol.questionTransferPort);
+
+			FileOutputStream fos = new FileOutputStream("Local/ExamQuestion/ExamHall="+examHall.getExamHallID()+".pdf");
+			bos = new BufferedOutputStream(fos);
+			byte[] buffer = new byte[2022386];
+			int count;
+			InputStream in = socket.getInputStream();
+			while((count=in.read(buffer)) >=0){
+				fos.write(buffer, 0, count);
+			}
+			fos.close();
+			
+			socket.close();
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
 	//Start Exam
 	public boolean startExam(ExamHall examHall){
 		
 		//check if exam has reached timing
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        java.util.Date currentTime = Calendar.getInstance().getTime();
+		java.util.Date currentDate = new java.util.Date(System.currentTimeMillis());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+		String time1 = dateFormat.format(currentDate);
+        String time2 = dateFormat.format(examHall.getExamSlot().getStartTime());
         
-        java.util.Date startTime = examHall.getExamSlot().getStartTime();
-        
-        if(currentTime.compareTo(startTime) > 0){
+        if(time1.compareTo(time2) > 0){
         	return true;
         }
         
@@ -157,16 +171,82 @@ public class ExamHallManager implements Serializable{
 
 	//Methods for end of exam
 	//End student exam
-	public void finishExam(Socket c, ExamHall examHall){
+	public void studentFinishExam(Socket c, ExamHall examHall, User user){
 		try{
 			out = new DataOutputStream(c.getOutputStream());
-			out.writeInt(SENDVIDEO);
-			out.writeInt(SENDANSWER);
-			out.writeInt(FINISHALL);
+			out.writeInt(Protocol.STUDENTSENDANSWER);
+			out.writeInt(Protocol.FINISH);
 			
 		}
 		catch(IOException ex){
 			System.out.println("Error : Unable to get I/O for the connection");
+		}
+	}
+	
+	public void finishExam(Socket c, ExamHall examHall){
+		try{
+			out = new DataOutputStream(c.getOutputStream());
+			out.writeInt(Protocol.ALLSENDVIDEO);
+			out.writeInt(Protocol.ALLSENDANSWER);
+			out.writeInt(Protocol.FINISHALL);
+			
+		}
+		catch(IOException ex){
+			System.out.println("Error : Unable to get I/O for the connection");
+		}
+	}
+
+	public void sendVideo(Socket c, String examHallID){  
+		byte[] byteArray; 
+	    BufferedInputStream bis;   
+	    BufferedOutputStream bos; 
+	    
+
+	    String fileToSend = "Local/ExamRecording/ExamHall="+examHallID+".mov";
+	    
+		try{
+
+			Socket socket = new Socket(Protocol.transferAddr, Protocol.videoTransferPort);
+			
+	    	File myFile = new File(fileToSend);
+			int count;
+	    	byte[] buffer = new byte[2022386];
+
+	    	OutputStream out = socket.getOutputStream();
+	    	BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
+	    	while ((count = in.read(buffer)) >= 0) {
+	    	     out.write(buffer, 0, count);
+	    	     out.flush();
+	    	}
+			socket.close();
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	public void sendAnswer(Socket c, String fileToSend){  
+		byte[] byteArray; 
+	    BufferedInputStream bis;   
+	    BufferedOutputStream bos; 
+	    
+		try{
+			Socket socket = new Socket(Protocol.transferAddr, Protocol.answerTransferPort);
+			
+	    	File myFile = new File(fileToSend);
+			int count;
+	    	byte[] buffer = new byte[2022386];
+
+	    	OutputStream out = socket.getOutputStream();
+	    	BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
+	    	while ((count = in.read(buffer)) >= 0) {
+	    	     out.write(buffer, 0, count);
+	    	     out.flush();
+	    	}
+			socket.close();
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
 		}
 	}
 	public void endStudentTakable(int userID, String examHallID){
@@ -194,7 +274,7 @@ public class ExamHallManager implements Serializable{
 	public void terminateStudent(Socket c, int userID, ExamHall examHall, String reason){
 		try{
 			out = new DataOutputStream(c.getOutputStream());
-			out.writeInt(TERMINATE);
+			out.writeInt(Protocol.STUDENTREMOVAL);
 			out.writeUTF(examHall.getExamHallID());
 			out.writeInt(userID);
 			out.writeUTF(reason);
@@ -203,77 +283,4 @@ public class ExamHallManager implements Serializable{
 			System.out.println("Error : Unable to get I/O for the connection");
 		}
 	}
-	
-	public void sendVideo(Socket c, String examHallID){  
-		byte[] byteArray; 
-	    BufferedInputStream bis;   
-	    BufferedOutputStream bos; 
-	    
-
-	    String fileToSend = "InvigilatorPC/ExamHall="+examHallID+".mov";
-	    
-		try{
-			ServerSocket ss = new ServerSocket(3000, 1);
-			Socket socket = ss.accept();
-
-	    	File myFile = new File(fileToSend);
-			int count;
-	    	byte[] buffer = new byte[1024];
-
-	    	OutputStream out = socket.getOutputStream();
-	    	BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
-	    	while ((count = in.read(buffer)) >= 0) {
-	    	     out.write(buffer, 0, count);
-	    	     out.flush();
-	    	}
-			socket.close();
-		}
-		catch(Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	public void saveAnswer(String answer, String examHallID, int userID){
-		try{
-			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("Local/ExamAnswer/ExamHall="+examHallID+"_userID="+userID+".txt", true)));
-			
-			writer.write(answer);
-			writer.close();
-			
-		}
-		catch(Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	public void sendAnswer(Socket c, String examHallID, int userID){  
-		byte[] byteArray; 
-	    BufferedInputStream bis;   
-	    BufferedOutputStream bos; 
-	    
-
-	    String fileToSend = "Local/ExamAnswer/ExamHall="+examHallID+"_userID="+userID+".txt";
-	    
-		try{
-			ServerSocket ss = new ServerSocket(3001, 1);
-			Socket socket = ss.accept();
-
-	    	File myFile = new File(fileToSend);
-			int count;
-	    	byte[] buffer = new byte[1024];
-
-	    	OutputStream out = socket.getOutputStream();
-	    	BufferedInputStream in = new BufferedInputStream(new FileInputStream(myFile));
-	    	while ((count = in.read(buffer)) >= 0) {
-	    	     out.write(buffer, 0, count);
-	    	     out.flush();
-	    	}
-			socket.close();
-		}
-		catch(Exception ex){
-			ex.printStackTrace();
-		}
-	}
-	
-	
 }

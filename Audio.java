@@ -1,5 +1,4 @@
 package eProctor;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,7 +15,6 @@ public class Audio extends JPanel implements Runnable {
 	
 	public Audio(int port){
 		this.port = port;
-		System.out.println(port);
 	};
 	
 	public void run(){
