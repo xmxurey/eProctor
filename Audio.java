@@ -12,6 +12,7 @@ public class Audio extends JPanel implements Runnable {
 	private int port;
 	private ServerSocket ss;
 	private Socket s;
+	private AudioPlayback player;
 	
 	public Audio(int port){
 		this.port = port;
@@ -25,7 +26,7 @@ public class Audio extends JPanel implements Runnable {
                 //s = null; 
                 try { 
                     s = ss.accept();
-                    AudioPlayback player=new AudioPlayback(s);
+                    player=new AudioPlayback(s);
     	            player.start();
                 } catch (Exception e) { 
                     e.printStackTrace(); 
@@ -38,5 +39,7 @@ public class Audio extends JPanel implements Runnable {
         } 
 	}
 	
-
+	public void close(){
+		player.stop();
+	}
 }

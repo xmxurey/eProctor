@@ -21,6 +21,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	private Socket client;
 	private User user;
 	private ExamHall examHall;
+	int joinNo=0;
 
 
 	//GUI
@@ -324,7 +325,6 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                     code = in.readInt();
                     System.out.println("code="+code);
                     if(code == Protocol.CONNECT){
-                    	int joinNo=0;
                     	synchronized(this){
                 			joinNo = examhallMgr.checkJoinNo(client);
                 			System.out.println("JoinNo="+ joinNo);
@@ -381,8 +381,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 	}
                 	else if(code == Protocol.STUDENTSENDANSWER){
 
-            			System.out.println("Enter 4");
                 		sendAnswer();
+                		endInvigilatorclient();
                 	}
                 	else if(code == Protocol.FINISHTIMER){
                 		if(time != null){
@@ -396,7 +396,6 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 			    "Exam has Ended");
 				        
 				        endInvigilatorclient();
-                		System.out.println("Entered");
                 	}
                 } catch (IOException e) {
                     System.out.println(" Exception reading Streams: " + e);
@@ -420,8 +419,6 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	
 	public void sendAnswer(){
 		try{
-
-			System.out.println("Enter 5");
 			String fileToSend = "Local/ExamAnswer/ExamHall=" + examHall.getExamHallID() +"_UserID="+ user.getUserID() +".txt";
 			
 			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter(fileToSend, false)));
