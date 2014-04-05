@@ -12,15 +12,11 @@ import java.net.*;
 public class ExamHall {
 	private ExamSlot examSlot;
 	private String examHallID;
-	private EventLog eventLog;
-	private Recording recording;
 	private ArrayList inExam;
 			
-	public ExamHall(ExamSlot es, String ehID, EventLog el){
+	public ExamHall(ExamSlot es, String ehID){
 		examSlot = es;
 		examHallID = ehID;
-		eventLog = el;
-		recording = null;
 		inExam = new ArrayList();
 	}
 	
@@ -40,18 +36,6 @@ public class ExamHall {
 	}
 	public String getExamHallID(){
 		return this.examHallID;
-	}	
-	public void setEventLog(EventLog el){
-		this.eventLog = el;
-	}
-	public EventLog getEventLog(){
-		return this.eventLog;
-	}	
-	public void setRecording(Recording r){
-		this.recording = r;
-	}
-	public Recording getRecording(){
-		return this.recording;
 	}	
 	public void setAttendanceList(ArrayList al){
 		this.inExam = al;

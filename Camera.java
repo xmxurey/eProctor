@@ -1,4 +1,5 @@
 package eProctor;
+
 import java.awt.Component;
 import java.util.Vector;
 
@@ -8,22 +9,16 @@ import javax.media.Player;
 import javax.media.format.VideoFormat;
 import javax.swing.JFrame;
 
-public class Camera extends JFrame implements Runnable{
+public class Camera{
 	
     Vector<javax.media.CaptureDeviceInfo>  deviceList=javax.media.CaptureDeviceManager.getDeviceList(null);
     javax.media.MediaLocator mediaLocator=null;
     Player player=null;
+    Component comp;
     
-    public Camera() {
-        this.setTitle("Test");
-        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        this.setSize(400,400);
-    }
-    
-    public void run(){
+    public Component Return(){
     	this.initCamera();
-        this.setLocationRelativeTo(null);
-        this.setVisible(true);
+    	return comp;
     }
     
     public void initCamera(){
@@ -56,17 +51,9 @@ public class Camera extends JFrame implements Runnable{
             System.out.println(this.mediaLocator);
             player   =   Manager.createRealizedPlayer(this.mediaLocator);
             player.start();
-            Component   comp;
-            if   ((comp   =   player.getVisualComponent())   !=   null) {
-                this.getContentPane().add(comp, "Center");
-            }
+            comp = player.getVisualComponent();
         } catch   (Exception   e) {
             e.printStackTrace();
         }
-    }
-    
-    public static void main(String[] args) {
-    	Camera camera = new Camera();
-    	new Thread(camera).start();
     }
 }

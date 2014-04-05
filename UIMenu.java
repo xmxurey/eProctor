@@ -379,6 +379,7 @@ public class UIMenu extends JFrame implements ActionListener {
 						//times up. access allowed
 						//connect to server
 						client = examHallMgr.connectExamHall(examHall, user);
+						
 						if(client == null){
 							JOptionPane.showMessageDialog(null,
 	                			    "Connection Fail: Invigilator has not entered / You are logged in.");
@@ -389,6 +390,7 @@ public class UIMenu extends JFrame implements ActionListener {
 							//launch UI for student. e.g UIStudent uiStudent = new UIStudent(User user, Socket client)
 							//each UIStudent will be able to determine which socket it belongs to.
 							if(user instanceof Student){
+								
 								
 								UIStudent uiStudent = new UIStudent(user, client, examHall);
 								uiStudent.setTitle("Student Exam");

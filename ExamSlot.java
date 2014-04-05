@@ -12,24 +12,14 @@ public class ExamSlot {
 	private Date startTime;
 	private Date endTime;
 	private Date date;
-	private ExamPaper examPaper;
 	
-	public ExamSlot(String s, int n, Date st, Date et, Date d, ExamPaper e){
-		slotID = s;
-		noOfExamHalls = n;
-		startTime = st;
-		endTime = et;
-		date = d;
-		examPaper = e;		
-	}
 	public ExamSlot(String s, int n, Date st, Date et, Date d){
 		slotID = s;
 		noOfExamHalls = n;
 		startTime = st;
 		endTime = et;
 		date = d;
-		examPaper = null;
-	}	
+	}
 	
 	//get and set methods
 	public void setSlotID(String s){
@@ -61,12 +51,6 @@ public class ExamSlot {
 	}
 	public Date getDate(){
 		return this.date;
-	}	
-	public void setExamPaper(ExamPaper e){
-		this.examPaper = e;
-	}
-	public ExamPaper getExamPaper(){
-		return this.examPaper;
 	}	
 	
 }

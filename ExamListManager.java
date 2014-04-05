@@ -25,7 +25,7 @@ public class ExamListManager {
 		GridBagConstraints b = new GridBagConstraints();
 		b.fill = GridBagConstraints.HORIZONTAL;
 		//connect to mySQL
-		String url = "jdbc:mysql://localhost:3306/";
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
 	    String dbName = "cz2006?";
 	    String driver = "com.mysql.jdbc.Driver";
         String username = "user=root&";
@@ -228,7 +228,7 @@ public class ExamListManager {
 	public JPanel displayLatestExam(User user){
 		JPanel panel = new JPanel(new GridLayout(5, 1));
 		//connect to mySQL
-		String url = "jdbc:mysql://localhost:3306/";
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
 	    String dbName = "cz2006?";
 	    String driver = "com.mysql.jdbc.Driver";
         String username = "user=root&";
@@ -348,8 +348,8 @@ public class ExamListManager {
 	//return list of examslots and related examhalls
 	public ArrayList getExamSlotList(String moduleCode){
 		ArrayList examSlotList = new ArrayList();
-		
-		String url = "jdbc:mysql://localhost:3306/";
+
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";
         String driver = "com.mysql.jdbc.Driver";
         String username = "user=root&";
@@ -405,7 +405,7 @@ public class ExamListManager {
 		
 		if(user instanceof Student){
 			//check if authenticate
-			String url = "jdbc:mysql://localhost:3306/";
+			String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
 		    String dbName = "cz2006?";
 		    String driver = "com.mysql.jdbc.Driver";
 		    String username = "user=root&";
@@ -519,8 +519,8 @@ public class ExamListManager {
 	
 	
 	public boolean deleteExamSlot(User user,String m){
-		
-		String url = "jdbc:mysql://localhost:3306/";
+
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";
         String driver = "com.mysql.jdbc.Driver";
         String username = "user=root&";

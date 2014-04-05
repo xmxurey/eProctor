@@ -17,7 +17,7 @@ public class UserManager {
 	
 	public User authenticate(String userName, String pass){ 
 		//check if authenticate
-		String url = "jdbc:mysql://localhost:3306/";
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";
         String driver = "com.mysql.jdbc.Driver";
         String username = "user=root&";

@@ -3,8 +3,6 @@ import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 import com.sun.pdfview.PagePanel;
 
-import eProctor.UIInvigilator.CountDown;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.net.Socket;
@@ -21,7 +19,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	private Socket client;
 	private User user;
 	private ExamHall examHall;
-
+    int joinNo=0;
 
 	//GUI
     private JScrollPane scrollQuestionField, scrollAnswerField, downScrollPane;
@@ -46,8 +44,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
     private ImageIcon submitButton = new ImageIcon("Images/savesubmit1.png");
 
     //List of Threads
-    //WebcamClient webcamClient;
-    //AudioClient audioClient;
+    WebcamClient webcamClient;
+    AudioClient audioClient;
 	//timer
 	Timer timer = new Timer();
     boolean timesUp = false;
@@ -60,17 +58,12 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 		
 	}
 	public UIStudent(User u, Socket c, ExamHall e){
-		
-		//webcamClient = new WebcamClient();
-		//audioClient = new AudioClient();
 		//Start all socket connection
 		client = c;
 		user = u;	
 		examHall = e;
 		
-		
 		Container container = getContentPane();
-
 
         layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new Dimension(d.width,(int)(d.height/1.05)));
@@ -85,11 +78,16 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         scrollQuestionField = new JScrollPane(pagePanel);
         scrollQuestionField.setOpaque(false);
 
+        
+      //camera
         photoPanel = new JPanel(new BorderLayout());
-        photoPanel.setOpaque(false);
         photoPanel.setSize(200,300);
-        photoPanel.add(new JTextField("Here is the photo"));
-
+        
+        Camera camera = new Camera();
+        Component comp;
+        comp = camera.Return();
+        photoPanel.add(comp);
+		
         //questionPlusPhotoPanel-----------------------------------------------------
         questionPlusPhotoPanel = new JPanel(new GridBagLayout());
         questionPlusPhotoPanel.setOpaque(false);
@@ -323,7 +321,16 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 try {
                     code = in.readInt();
                     System.out.println("code="+code);
-                    if(code == Protocol.RECEIVEQUESTION){
+                    if(code == Protocol.CONNECT){
+                    	synchronized(this){
+                			joinNo = examhallMgr.checkJoinNo(client);
+                			System.out.println("JoinNo="+ joinNo);
+                		}
+                		webcamClient = new WebcamClient(joinNo);
+                		webcamClient.start();
+                		audioClient = new AudioClient(Protocol.audioPort[joinNo]);
+                    }
+                    else if(code == Protocol.RECEIVEQUESTION){
                 		//get pdfQuestion
                         examhallMgr.receiveQuestion(client, examHall);
                         //display pdf page
@@ -354,7 +361,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
-                		time = new Thread(new CountDown(delay));
+                		time = new Thread(new CountDown(delay,lblTimer,btnSubmit));
                 		time.start();
 
                 		//Create answer file
@@ -373,6 +380,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
             			System.out.println("Enter 4");
                 		sendAnswer();
+                        endInvigilatorclient();
                 	}
                 	else if(code == Protocol.FINISHTIMER){
                 		if(time != null){
@@ -385,10 +393,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 				        JOptionPane.showMessageDialog(null,
                 			    "Exam has Ended");
 				        
-                		//end webcam
-                		//webcamClient.camStop();
-                		//end audio
-                		//audioClient.audioStop();
+				        endInvigilatorclient();
                 		System.out.println("Entered");
                 	}
                 } catch (IOException e) {
@@ -403,6 +408,13 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	        e.printStackTrace();
         }
     }
+	
+	public void endInvigilatorclient(){
+		//end webcam
+		webcamClient.stop();
+		//end audio
+		audioClient.audioStop();
+	}
 	
 	public void sendAnswer(){
 		try{
@@ -437,38 +449,38 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
     } 
 	
 	//countdown timer
-	class CountDown implements Runnable{
-		long sec;
-		long HH;
-		long MM;
-		long SS;
-		boolean stop=false;
-		
-		public CountDown(long s){
-			sec = s;
-			
-		}
-		public void run(){
-			while(sec>=0){
-
-				SS = sec % 60;
-				MM = (sec/60) % 60;
-				HH = sec/3600;
-				try{
-					Thread.sleep(1000);
-				}
-				catch (InterruptedException x) {
-                }
-				lblTimer.setText(HH + ":" + MM + ":" + SS);
-				sec--;
-				
-			}
-			lblTimer.setText("Times Up");
-			timesUp = true;
-			
-			if(timesUp==true){
-				btnSubmit.setEnabled(false);
-        	}
-		}
-	}
+//	class CountDown implements Runnable{
+//		long sec;
+//		long HH;
+//		long MM;
+//		long SS;
+//		boolean stop=false;
+//		
+//		public CountDown(long s){
+//			sec = s;
+//			
+//		}
+//		public void run(){
+//			while(sec>=0){
+//
+//				SS = sec % 60;
+//				MM = (sec/60) % 60;
+//				HH = sec/3600;
+//				try{
+//					Thread.sleep(1000);
+//				}
+//				catch (InterruptedException x) {
+//                }
+//				lblTimer.setText(HH + ":" + MM + ":" + SS);
+//				sec--;
+//				
+//			}
+//			lblTimer.setText("Times Up");
+//			timesUp = true;
+//			
+//			if(timesUp==true){
+//				btnSubmit.setEnabled(false);
+//        	}
+//		}
+//	}
 }

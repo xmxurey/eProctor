@@ -26,7 +26,7 @@ public class ExamHallManager implements Serializable{
 		ExamSlot examSlot=null;
 		ExamHall examHall = null;
 		//check if user can enter examhall
-		String url = "jdbc:mysql://localhost:3306/";
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";
         String driver = "com.mysql.jdbc.Driver";
         String username = "user=root&";
@@ -76,7 +76,7 @@ public class ExamHallManager implements Serializable{
 	        	System.out.println("Access Allowed.");
 	        	examSlot = new ExamSlot(examSlotID, noOfExamHall, startTime, endTime, startDate);
 	        	//create examHall
-	        	examHall = new ExamHall(examSlot, examHallID, null);
+	        	examHall = new ExamHall(examSlot, examHallID);
 	        }
 	        else{
 	        	JOptionPane.showMessageDialog(null, "You cannot enter the exam hall because it is 20 minutes before the start of the exam");
@@ -133,7 +133,7 @@ public class ExamHallManager implements Serializable{
 	    BufferedOutputStream bos; 
 	    
 		try{
-			Socket socket = new Socket(Protocol.transferAddr, Protocol.questionTransferPort);
+			Socket socket = new Socket(Protocol.questionTransferAddr, Protocol.questionTransferPort);
 
 			FileOutputStream fos = new FileOutputStream("Local/ExamQuestion/ExamHall="+examHall.getExamHallID()+".pdf");
 			bos = new BufferedOutputStream(fos);
@@ -150,6 +150,22 @@ public class ExamHallManager implements Serializable{
 		catch(Exception ex){
 			ex.printStackTrace();
 		}
+	}
+	
+	public int checkJoinNo(Socket client){
+		try{
+			out = new DataOutputStream(client.getOutputStream());
+			in = new DataInputStream(client.getInputStream());
+			out.writeInt(Protocol.CHECKJOINNO);
+			int joinNo = in.readInt();
+			return joinNo;
+		}
+		catch(IOException ex){
+			ex.printStackTrace();
+		}
+		
+		
+		return 0;
 	}
 	
 	//Start Exam
@@ -206,7 +222,7 @@ public class ExamHallManager implements Serializable{
 	    
 		try{
 
-			Socket socket = new Socket(Protocol.transferAddr, Protocol.videoTransferPort);
+			Socket socket = new Socket(Protocol.videoTransferAddr, Protocol.videoTransferPort);
 			
 	    	File myFile = new File(fileToSend);
 			int count;
@@ -231,7 +247,7 @@ public class ExamHallManager implements Serializable{
 	    BufferedOutputStream bos; 
 	    
 		try{
-			Socket socket = new Socket(Protocol.transferAddr, Protocol.answerTransferPort);
+			Socket socket = new Socket(Protocol.answerTransferAddr, Protocol.answerTransferPort);
 			
 	    	File myFile = new File(fileToSend);
 			int count;
@@ -250,7 +266,7 @@ public class ExamHallManager implements Serializable{
 		}
 	}
 	public void endStudentTakable(int userID, String examHallID){
-		String url = "jdbc:mysql://localhost:3306/";
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";
         String driver = "com.mysql.jdbc.Driver";
         String username = "user=root&";

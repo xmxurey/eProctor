@@ -37,6 +37,7 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 	
 	private Screen[] student;
+    private Thread[] webcamThread, audioThread;
 	private Audio[] audio;
 
 	
@@ -44,13 +45,15 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable{
 	private ExamHallManager examhallMgr = new ExamHallManager();
 	
 	//Arraylist of participants
-	private ArrayList studentList = new ArrayList();
-	
+    private ArrayList terminateList = new ArrayList();
+    private int tracker=0;
+    private Integer studentArr[] = new Integer[6];
+
 	//timer
 	Timer timer = new Timer();
     boolean timesUp = false;
     long delay=0;
-    
+
     //Recording
   	private Recorder recorder;
 	
@@ -83,12 +86,17 @@ Container container = getContentPane();
 		
 		student = new Screen[6];
 		audio = new Audio[6];
+        audioThread = new Thread[6];
+        webcamThread = new Thread[6];
+
 		for (int i=0; i<6; i++){
-			student[i] = new Screen(5000+i);
-			audio[i] = new Audio(6000+i);
+			student[i] = new Screen(Protocol.webcamPort[i]);
+			audio[i] = new Audio(Protocol.audioPort[i]);
 			pCenter.add(student[i],new Integer(1));
-			new Thread(audio[i]).start();
-			new Thread(student[i]).start(); 
+			audioThread[i] = new Thread(audio[i]);
+            audioThread[i].start();
+			webcamThread[i] = new Thread(student[i]);
+            webcamThread[i].start();
 	        SwingUtilities.invokeLater(new Runnable(){ 
 	            public void run() { 
 	                setVisible(true); 
@@ -208,7 +216,7 @@ Container container = getContentPane();
 							btnStartStop.setIcon(finishButton);
 					        btnStartStop.setRolloverIcon(new ImageIcon("Images/endexam3.png"));
 					        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
-							//btnStartStop.setEnabled(false);
+							btnStartStop.setEnabled(false);
 							//start exam
 							out.writeInt(Protocol.START);
 						}
@@ -230,8 +238,7 @@ Container container = getContentPane();
 				}
 				else if (btnImage.equals(terminate.toString())){
 					//get user ID
-					String uID = (String)ddlTerminate.getSelectedItem();
-					int terminateID = Integer.parseInt(uID);
+                    int terminateID = (Integer)ddlTerminate.getSelectedItem();
 					
 					//pop out message box for reason of termination
 					String reason = JOptionPane.showInputDialog(null,
@@ -242,8 +249,11 @@ Container container = getContentPane();
 						int n = JOptionPane.showOptionDialog(null, "Confirm Exam Termination", "SYSTEM NOTICE", JOptionPane.YES_NO_OPTION,
 								JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
 						if (n == JOptionPane.YES_OPTION){
-						//send to server to terminate userID from examHall
-						examhallMgr.terminateStudent(client, terminateID, examHall, reason);
+                            audioThread[terminateID].stop();
+                            audio[terminateID].close();
+                            webcamThread[terminateID].stop();
+						    //send to server to terminate userID from examHall
+						    examhallMgr.terminateStudent(client, studentArr[terminateID], examHall, reason);
 						}
 					}
 					else{
@@ -274,8 +284,14 @@ Container container = getContentPane();
                 	
                 	if(code == Protocol.CONNECT){
                 		int userID = in.readInt();
-                		studentList.add(""+userID);
-                		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
+                        studentArr[tracker] = userID;
+                        tracker++;
+                        terminateList.removeAll(terminateList);
+                        for(int i=0;i<6;i++){
+                            if(studentArr[i] != null)
+                                terminateList.add(i);
+                        }
+                		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(terminateList.toArray()));
                 	}
                 	else if(code == Protocol.MSG){
                 		//display msg from eventlog
@@ -287,7 +303,7 @@ Container container = getContentPane();
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
-                		time = new Thread(new CountDown(delay));
+                		time = new Thread(new CountDown(delay,lblTimer,btnStartStop,finishButton,new ImageIcon("Images/endexam3.png")));
                 		time.start();
                 		
                 		//get exam paper
@@ -330,10 +346,16 @@ Container container = getContentPane();
                 			userID = in.readInt();
                 			
                 			examhallMgr.endStudentTakable(userID, examHallID);
-                			studentList.remove(""+userID);
-                    		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
+                            for(int j=0;j<6;j++){
+                                if(studentArr[j] == userID){
+                                    studentArr[j] = null;
+                                    terminateList.remove(j);
+                                    break;
+                                }
+                            }
                 			//Terminate all server interface
                 		}
+                        ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(terminateList.toArray()));
                 		//display start message
 				        JOptionPane.showMessageDialog(null,
                 			    "Exam has Ended");
@@ -350,8 +372,14 @@ Container container = getContentPane();
                 		examhallMgr.endStudentTakable(userID, examHallID);
 
                 		//delete userid from combobox
-                		studentList.remove(""+userID);
-                		ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(studentList.toArray()));
+                        for(int j=0;j<6;j++){
+                            if(studentArr[j] == userID){
+                                studentArr[j] = null;
+                                terminateList.remove(j);
+                                break;
+                            }
+                        }
+                        ddlTerminate.setModel(new javax.swing.DefaultComboBoxModel(terminateList.toArray()));
 
                 		//End screen session and audio session
                 		
@@ -373,43 +401,48 @@ Container container = getContentPane();
 	        e.printStackTrace();
         }
     }
-	
-	//countdown timer
-	class CountDown implements Runnable{
-		long sec;
-		long HH;
-		long MM;
-		long SS;
-		boolean stop=false;
-		
-		public CountDown(long s){
-			sec = s;
-			
-		}
-		public void run(){
-			while(sec>=0){
 
-				SS = sec % 60;
-				MM = (sec/60) % 60;
-				HH = sec/3600;
-				try{
-					Thread.sleep(1000);
-				}
-				catch (InterruptedException x) {
-                }
-				lblTimer.setText(HH + ":" + MM + ":" + SS);
-				sec--;
-				
-			}
-			lblTimer.setText("Times Up");
-			timesUp = true;
-			
-			if(timesUp==true){
-				btnStartStop.setIcon(finishButton);
-		        btnStartStop.setRolloverIcon(new ImageIcon("Images/endexam3.png"));
-		        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
-        		btnStartStop.setEnabled(true);
-        	}
-		}
-	}
+    public void close(int i){
+        webcamThread[i].stop();
+        audioThread[i].stop();
+    }
+	
+//	//countdown timer
+//	class CountDown implements Runnable{
+//		long sec;
+//		long HH;
+//		long MM;
+//		long SS;
+//		boolean stop=false;
+//		
+//		public CountDown(long s){
+//			sec = s;
+//			
+//		}
+//		public void run(){
+//			while(sec>=0){
+//
+//				SS = sec % 60;
+//				MM = (sec/60) % 60;
+//				HH = sec/3600;
+//				try{
+//					Thread.sleep(1000);
+//				}
+//				catch (InterruptedException x) {
+//                }
+//				lblTimer.setText(HH + ":" + MM + ":" + SS);
+//				sec--;
+//				
+//			}
+//			lblTimer.setText("Times Up");
+//			timesUp = true;
+//			
+//			if(timesUp==true){
+//				btnStartStop.setIcon(finishButton);
+//		        btnStartStop.setRolloverIcon(new ImageIcon("Images/endexam3.png"));
+//		        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
+//        		btnStartStop.setEnabled(true);
+//        	}
+//		}
+//	}
 }

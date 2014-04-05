@@ -1,7 +1,6 @@
 package eProctor;
 
 import java.io.*;
-
 import java.net.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,6 +9,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.text.*;
 import java.nio.file.Files;
+
 import javax.swing.*;
 
 public class Server extends Thread{
@@ -90,15 +90,37 @@ public class Server extends Thread{
 	}
 	
 	private synchronized void connectInvExam(String examHallID, int userID) {
+        //check if userID input is prof
+        boolean student=true;
+        for(Session s: ExamHallParticipantList){
+            if(s.getExamHallID().equals(examHallID) && s.getUserID() == userID){
+                student = s.isStudent;
+                break;
+            }
+        }
+        if(student){
+            for (Session s : ExamHallParticipantList) {
+                if(s.getExamHallID().equals(examHallID)){
+                    if(s.isStudent == false){
+                        //isInvigilator
+                        s.writeInt(Protocol.CONNECT);
+                        s.writeInt(userID);
+                        break;
+                    }
+
+                }
+            }
+        }
+    }
+
+	private synchronized int checkJoinNo(String eID){
+		int count=0;
 		for (Session s : ExamHallParticipantList) {
-			if(s.getExamHallID().equals(examHallID)){
-				if(s.isStudent == false){
-					//isInvigilator
-					s.writeInt(Protocol.CONNECT);
-					s.writeInt(userID);
-				}
+			if(s.getExamHallID().equals(eID)){
+				count++;				
 			}
 		}
+		return count;
 	}
 	
 	/*
@@ -160,13 +182,13 @@ public class Server extends Thread{
 		      	if(s.getExamHallID().equals(examHallID)){
 		      		if(s.isStudent){
 			      		s.writeInt(Protocol.ALLSENDANSWER);
-			      		receiveAnswer();
+			      		receiveAnswer(s.examHallID, s.userID);
 		      		}
 		      	}
 		}
 	}
 	//receive Answer File
-	private void receiveAnswer(){
+	private void receiveAnswer(String eID, int uID){
 		BufferedInputStream bis;
 		BufferedOutputStream bos;
 		byte[] data;
@@ -174,7 +196,7 @@ public class Server extends Thread{
 			ServerSocket ss = new ServerSocket(Protocol.answerTransferPort, 1);
 			Socket socket = ss.accept();
 			
-			FileOutputStream fos = new FileOutputStream("eProctorServer/ExamAnswerSheet/ExamHall="+examHallID+"_UserID="+userID+".txt");
+			FileOutputStream fos = new FileOutputStream("eProctorServer/ExamAnswerSheet/ExamHall="+eID+"_UserID="+uID+".txt");
 			bos = new BufferedOutputStream(fos);
 			byte[] buffer = new byte[2022386];
 			int count;
@@ -183,9 +205,15 @@ public class Server extends Thread{
 
 				fos.write(buffer, 0, count);
 			}
+			//send to NTU server
+			File answerSource = new File("eProctorServer/ExamAnswerSheet/ExamHall="+eID+"_UserID="+uID+".txt");
+			File answerDest = new File("NTUServer/ExamAnswer/ExamHall="+eID+"_UserID="+uID+".txt");
+			transferFile(answerSource,answerDest);
+			
 			fos.close();
 			
 			socket.close();
+			ss.close();
 			
 		}
 		catch(Exception ex){
@@ -251,7 +279,10 @@ public class Server extends Thread{
 		Server server = new Server();
         server.start();
 	}
-
+	//Send files to server
+	private void transferFile(File source, File dest)throws IOException{
+		Files.copy(source.toPath(), dest.toPath());
+	}
 
 //Session Class
 	class Session extends Thread{
@@ -261,7 +292,7 @@ public class Server extends Thread{
 		private boolean isStudent = true;
 		
 		//check if user can enter examhall
-		String url = "jdbc:mysql://localhost:3306/";
+		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
 		String dbName = "cz2006?";
 		String driver = "com.mysql.jdbc.Driver";
 		String username = "user=root&";
@@ -294,7 +325,7 @@ public class Server extends Thread{
 				
 				while(true){
 					int code = in.readInt();
-					
+					System.out.println("Code="+code);
 					if(code == Protocol.CONNECT){
 
 						connectExam(examHallID, userID, isStudent);
@@ -309,7 +340,12 @@ public class Server extends Thread{
 						}
 						else if(isStudent){
 							sendQuestion();
+							out.writeInt(Protocol.CONNECT);
 						}
+					}
+					else if(code == Protocol.CHECKJOINNO){
+						int joinNo = checkJoinNo(examHallID) -2;
+						out.writeInt(joinNo);
 					}
 					else if (code == Protocol.RECEIVEQUESTION){
 						sendQuestion();
@@ -448,22 +484,13 @@ public class Server extends Thread{
 					name = res.getString("Name");
 				}
 				
-				//Check if eventlog is created
-				res = st.executeQuery("Select eventLogID FROM examhall where examHallID='" + examHallID + "'");
-				int eventLogID=0;
-				while (res.next()){
-					eventLogID = res.getInt("eventLogID");
-				}
 				PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter("eProctorServer/EventLog/ExamHall=" + examHallID+ ".txt", true)));
-				if(eventLogID<=0){
-					//no eventlog exist. Need to create eventlog
-					DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-					Calendar cal = Calendar.getInstance();
-					
-					writer.println("Eventlog created on "+cal.getTime());
-				}
+
+				//no eventlog exist. Need to create eventlog
+				DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				Calendar cal = Calendar.getInstance();
 	
-				writer.println(name+ " has joined the examHall");
+				writer.println(name+ " has joined the examHall at "+cal.getTime());
 				writer.close();
 				
 				broadcast(getExamHallID());
@@ -496,6 +523,7 @@ public class Server extends Thread{
 		    	     out.flush();
 		    	}
 				socket.close();
+				ss.close();
 				
 			}
 			catch(Exception ex){
@@ -594,7 +622,7 @@ public class Server extends Thread{
 		public void studentSendAnswer(String examHallID, int userID){	
 			try{
 				out.writeInt(Protocol.STUDENTSENDANSWER);
-	      		receiveAnswer();
+	      		receiveAnswer(examHallID, userID);
 			}
 			catch(IOException ex){
 				ex.printStackTrace();
@@ -622,6 +650,7 @@ public class Server extends Thread{
 				fos.close();
 				
 				socket.close();
+				ss.close();
 				
 			}
 			catch(Exception ex){
@@ -654,7 +683,7 @@ public class Server extends Thread{
 			try{
 				//update eventlog for students whole takable = 1
 				//check if user can enter examhall
-				String url = "jdbc:mysql://localhost:3306/";
+				String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
 				String dbName = "cz2006?";
 				String driver = "com.mysql.jdbc.Driver";
 				String username = "user=root&";
@@ -695,11 +724,6 @@ public class Server extends Thread{
 			catch(Exception ex){
 				ex.printStackTrace();
 			}
-		}
-		
-		//Send files to server
-		private void transferFile(File source, File dest)throws IOException{
-			Files.copy(source.toPath(), dest.toPath());
 		}
 		
 		/*

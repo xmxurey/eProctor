@@ -18,9 +18,11 @@ public class WebcamClient extends Thread {
    private Rectangle rectangle; 
    private Robot robot; 
    private Thread cam;
+   int port;
    
 
-   public WebcamClient() { 
+   public WebcamClient(int p) { 
+	   port = p;
        screenSize = Toolkit.getDefaultToolkit().getScreenSize(); 
        rectangle = new Rectangle(screenSize); 
        try { 
@@ -29,8 +31,8 @@ public class WebcamClient extends Thread {
             e.printStackTrace(); 
             System.out.println(e); 
         } 
-       cam = new Thread();
-       cam.start();
+       //cam = new Thread();
+       //cam.start();
     } 
  
     public void run() { 
@@ -39,7 +41,8 @@ public class WebcamClient extends Thread {
         while (true) { 
             try { 
                 //socket = new Socket("127.0.0.1", 5000);
-                socket = new Socket(Protocol.webcamAddr, Protocol.webcamPort);
+                //socket = new Socket(Protocol.webcamAddr, Protocol.webcamPort);
+                socket = new Socket(Protocol.webcamAddr, Protocol.webcamPort[port]);
                 BufferedImage image = robot.createScreenCapture(rectangle); 
                 
                 int width = image.getWidth();
@@ -76,13 +79,7 @@ public class WebcamClient extends Thread {
             } 
         } 
     } 
- 
-    public void camStop(){
-    	if(cam != null){
-    		cam.stop();
-    	}
-    }
     public static void main(String[] args) { 
-        new WebcamClient().start(); 
+        //new WebcamClient().start(); 
     } 
 } 
