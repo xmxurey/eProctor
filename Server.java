@@ -90,29 +90,16 @@ public class Server extends Thread{
 	}
 	
 	private synchronized void connectInvExam(String examHallID, int userID) {
-        //check if userID input is prof
-        boolean student=true;
-        for(Session s: ExamHallParticipantList){
-            if(s.getExamHallID().equals(examHallID) && s.getUserID() == userID){
-                student = s.isStudent;
-                break;
-            }
-        }
-        if(student){
-            for (Session s : ExamHallParticipantList) {
-                if(s.getExamHallID().equals(examHallID)){
-                    if(s.isStudent == false){
-                        //isInvigilator
-                        s.writeInt(Protocol.CONNECT);
-                        s.writeInt(userID);
-                        break;
-                    }
-
-                }
-            }
-        }
-    }
-
+		for (Session s : ExamHallParticipantList) {
+			if(s.getExamHallID().equals(examHallID)){
+				if(s.isStudent == false){
+					//isInvigilator
+					s.writeInt(Protocol.CONNECT);
+					s.writeInt(userID);
+				}
+			}
+		}
+	}
 	private synchronized int checkJoinNo(String eID){
 		int count=0;
 		for (Session s : ExamHallParticipantList) {

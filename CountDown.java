@@ -9,20 +9,10 @@ class CountDown implements Runnable{
     long SS;
     JLabel lblTimer = null;
     boolean timesUp = false;
-    JButton button = null;
-    ImageIcon imageIcon = null;
-    ImageIcon imageIcon1 = null;
 
-    public CountDown(long s, JLabel label, JButton button){
-        new CountDown(s, label, button, null, null);
-    }
-
-    public CountDown(long s, JLabel label, JButton button, ImageIcon imageIcon, ImageIcon imageIcon1){
+    public CountDown(long s, JLabel label){
         sec = s;
         this.lblTimer = label;
-        this.button = button;
-        this.imageIcon = imageIcon;
-        this.imageIcon1 = imageIcon1;
     }
     public void run(){
 
@@ -45,15 +35,9 @@ class CountDown implements Runnable{
         lblTimer.setText("Times Up");
         timesUp = true;
 
-        if (timesUp == true){
-            button.setEnabled( (!button.isEnabled()) );
-            if (imageIcon != null){
-                button.setIcon(imageIcon);
-                button.setRolloverIcon(imageIcon1);
-                button.setPressedIcon(imageIcon1);
-            }
-        }
     }
 
-
+    public boolean isTimesUp(){
+        return timesUp;
+    }
 }
