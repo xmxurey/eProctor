@@ -87,7 +87,7 @@ Container container = getContentPane();
 		student = new Screen[6];
 		audio = new Audio[6];
 		audioThread = new Thread[6];
-		webcamThread = new Thread[6];
+		//webcamThread = new Thread[6];
 		
 		for (int i=0; i<6; i++){
 			student[i] = new Screen(Protocol.webcamPort[i]);
@@ -95,8 +95,9 @@ Container container = getContentPane();
 			pCenter.add(student[i],new Integer(1));
 			audioThread[i] = new Thread(audio[i]);
 			audioThread[i].start();
-			webcamThread[i] = new Thread(student[i]);
-			webcamThread[i].start();
+			new Thread(student[i]).start();
+			//webcamThread[i] = new Thread(student[i]);
+			//webcamThread[i].start();
 	        SwingUtilities.invokeLater(new Runnable(){ 
 	            public void run() { 
 	                setVisible(true); 
@@ -251,7 +252,7 @@ Container container = getContentPane();
 						if (n == JOptionPane.YES_OPTION){
 							audioThread[terminateID].stop();
 							audio[terminateID].close();
-							webcamThread[terminateID].stop();
+							//webcamThread[terminateID].stop();
 						//send to server to terminate userID from examHall
 						examhallMgr.terminateStudent(client, studentArr[terminateID], examHall, reason);
 						}

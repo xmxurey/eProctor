@@ -21,7 +21,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	private Socket client;
 	private User user;
 	private ExamHall examHall;
-	int joinNo=0;
+	
 
 
 	//GUI
@@ -320,6 +320,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
             System.out.println("New Session Started");
             int code=0;
+            int joinNo=0;
             while (true) {
                 try {
                     code = in.readInt();
