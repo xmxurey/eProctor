@@ -14,7 +14,7 @@ class CountDown implements Runnable{
     ImageIcon imageIcon1 = null;
 
     public CountDown(long s, JLabel label, JButton button){
-        new CountDown(s, label, button, null, null);
+        this(s, label, button, null, null);
     }
 
     public CountDown(long s, JLabel label, JButton button, ImageIcon imageIcon, ImageIcon imageIcon1){
