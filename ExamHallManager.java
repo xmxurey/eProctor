@@ -12,16 +12,8 @@ import javax.swing.*;
 
 public class ExamHallManager implements Serializable{
 	
-	
-	//Connection
-	private DataInputStream in;
-	private DataOutputStream out;
-	public ExamHallManager(){
-		
-	}
-	
 	//enter exam Hall
-	public ExamHall enterExamHall(User user, String examHallID){
+	public static ExamHall enterExamHall(User user, String examHallID){
 		
 		ExamSlot examSlot=null;
 		ExamHall examHall = null;
@@ -90,12 +82,13 @@ public class ExamHallManager implements Serializable{
 		return examHall;
 	}
 	
-	public Socket connectExamHall(ExamHall examHall, User user){
+	public static Socket connectExamHall(ExamHall examHall, User user){
 		String serverAddr = Protocol.serverAddr; 	// server host name
 		int portNo=Protocol.serverPortNo;
 		try {
 	  			// S1 - create a socket to connect to server      
-			
+            DataInputStream in;
+            DataOutputStream out;
 			
 			Socket con = new Socket(serverAddr, portNo);
 			in = new DataInputStream(con.getInputStream());
@@ -127,7 +120,7 @@ public class ExamHallManager implements Serializable{
 		return null;
 	}
 
-	public void receiveQuestion(Socket client, ExamHall examHall){
+	public static void receiveQuestion(Socket client, ExamHall examHall){
 		byte[] byteArray; 
 	    BufferedInputStream bis;   
 	    BufferedOutputStream bos; 
@@ -152,8 +145,10 @@ public class ExamHallManager implements Serializable{
 		}
 	}
 	
-	public int checkJoinNo(Socket client){
+	public static int checkJoinNo(Socket client){
 		try{
+            DataInputStream in;
+            DataOutputStream out;
 			out = new DataOutputStream(client.getOutputStream());
 			in = new DataInputStream(client.getInputStream());
 			out.writeInt(Protocol.CHECKJOINNO);
@@ -169,7 +164,7 @@ public class ExamHallManager implements Serializable{
 	}
 	
 	//Start Exam
-	public boolean startExam(ExamHall examHall){
+	public static boolean startExam(ExamHall examHall){
 		
 		//check if exam has reached timing
 		java.util.Date currentDate = new java.util.Date(System.currentTimeMillis());
@@ -187,8 +182,9 @@ public class ExamHallManager implements Serializable{
 
 	//Methods for end of exam
 	//End student exam
-	public void studentFinishExam(Socket c, ExamHall examHall, User user){
+	public static void studentFinishExam(Socket c, ExamHall examHall, User user){
 		try{
+            DataOutputStream out;
 			out = new DataOutputStream(c.getOutputStream());
 			out.writeInt(Protocol.STUDENTSENDANSWER);
 			out.writeInt(Protocol.FINISH);
@@ -199,8 +195,10 @@ public class ExamHallManager implements Serializable{
 		}
 	}
 	
-	public void finishExam(Socket c, ExamHall examHall){
+	public static void finishExam(Socket c, ExamHall examHall){
 		try{
+
+            DataOutputStream out;
 			out = new DataOutputStream(c.getOutputStream());
 			out.writeInt(Protocol.ALLSENDVIDEO);
 			out.writeInt(Protocol.ALLSENDANSWER);
@@ -212,7 +210,7 @@ public class ExamHallManager implements Serializable{
 		}
 	}
 
-	public void sendVideo(Socket c, String examHallID){  
+	public static void sendVideo(Socket c, String examHallID){
 		byte[] byteArray; 
 	    BufferedInputStream bis;   
 	    BufferedOutputStream bos; 
@@ -241,7 +239,7 @@ public class ExamHallManager implements Serializable{
 		}
 	}
 	
-	public void sendAnswer(Socket c, String fileToSend){  
+	public static void sendAnswer(Socket c, String fileToSend){
 		byte[] byteArray; 
 	    BufferedInputStream bis;   
 	    BufferedOutputStream bos; 
@@ -265,7 +263,7 @@ public class ExamHallManager implements Serializable{
 			ex.printStackTrace();
 		}
 	}
-	public void endStudentTakable(int userID, String examHallID){
+	public static void endStudentTakable(int userID, String examHallID){
 		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";
         String driver = "com.mysql.jdbc.Driver";
@@ -287,8 +285,10 @@ public class ExamHallManager implements Serializable{
         }
 	}
 
-	public void terminateStudent(Socket c, int userID, ExamHall examHall, String reason){
+	public static void terminateStudent(Socket c, int userID, ExamHall examHall, String reason){
 		try{
+
+            DataOutputStream out;
 			out = new DataOutputStream(c.getOutputStream());
 			out.writeInt(Protocol.STUDENTREMOVAL);
 			out.writeUTF(examHall.getExamHallID());

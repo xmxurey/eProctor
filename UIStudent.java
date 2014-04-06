@@ -51,8 +51,6 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
     boolean timesUp = false;
     long delay=0;
 
-	//managers
-	private ExamHallManager examhallMgr = new ExamHallManager();
 	
 	public UIStudent(){		
 		
@@ -278,8 +276,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter(fileToSend, false)));
         			System.out.println("text="+txtAnswer.getText());
         			writer.println(txtAnswer.getText());
-        			
-        			examhallMgr.studentFinishExam(client, examHall, user);
+
+                    ExamHallManager.studentFinishExam(client, examHall, user);
         			
     				writer.close();
         			
@@ -325,7 +323,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                     System.out.println("code="+code);
                     if(code == Protocol.CONNECT){
                     	synchronized(this){
-                			joinNo = examhallMgr.checkJoinNo(client);
+                			joinNo = ExamHallManager.checkJoinNo(client);
                 			System.out.println("JoinNo="+ joinNo);
                 		}
                 		webcamClient = new WebcamClient(joinNo);
@@ -334,7 +332,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                     }
                     else if(code == Protocol.RECEIVEQUESTION){
                 		//get pdfQuestion
-                        examhallMgr.receiveQuestion(client, examHall);
+                        ExamHallManager.receiveQuestion(client, examHall);
                         //display pdf page
                         pdffile = PDFDisplayManager.setup(examHall.getExamHallID());
                         pageCount = pdffile.getNumPages();
@@ -424,9 +422,9 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 			writer.println(txtAnswer.getText());
 
 			writer.close();
-			
-    		examhallMgr.sendAnswer(client, fileToSend);
-			
+
+            ExamHallManager.sendAnswer(client, fileToSend);
+
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
@@ -435,9 +433,9 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	}
 	
 	public void receiveQuestion(){
-		examhallMgr.receiveQuestion(client, examHall);
+        ExamHallManager.receiveQuestion(client, examHall);
 	}
-	
+
 	public static void main(String[] args){
     	UIStudent uiStudent = new UIStudent();
 //    	uiStudent.setBounds(0, 0, 800, 600);
