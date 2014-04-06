@@ -1,4 +1,5 @@
 package eProctor;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.Socket;
@@ -9,66 +10,66 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
-class AudioPlayback implements Runnable { 
+class AudioPlayback implements Runnable {
 
-       final int bufSize = 16384; 
-       private SourceDataLine line; 
-       private Thread thread; 
-       private Socket s; 
+    final int bufSize = 16384;
+    private SourceDataLine line;
+    private Thread thread;
+    private Socket s;
 
-       AudioPlayback(Socket s){ 
-         this.s=s; 
-       } 
-       public void start() { 
+    AudioPlayback(Socket s) {
+        this.s = s;
+    }
 
-           thread = new Thread(this); 
-           thread.setName("AudioPlayback"); 
-           thread.start(); 
-       } 
+    public void start() {
 
-       public void stop() { 
-           thread = null; 
-       } 
+        thread = new Thread(this);
+        thread.setName("AudioPlayback");
+        thread.start();
+    }
 
-       public void run() { 
+    public void stop() {
+        thread = null;
+    }
 
-           AudioFormat format =new AudioFormat(8000,16,2,true,true);
-           BufferedInputStream playbackInputStream; 
+    public void run() {
 
-           try { 
-             playbackInputStream=new BufferedInputStream(new AudioInputStream(s.getInputStream(),format,2147483647));
-           } 
-           catch (IOException ex) { 
-               return; 
-           } 
+        AudioFormat format = new AudioFormat(8000, 16, 2, true, true);
+        BufferedInputStream playbackInputStream;
 
-           DataLine.Info info = new DataLine.Info(SourceDataLine.class,format); 
+        try {
+            playbackInputStream = new BufferedInputStream(new AudioInputStream(s.getInputStream(), format, 2147483647));
+        } catch (IOException ex) {
+            return;
+        }
 
-           try { 
-               line = (SourceDataLine) AudioSystem.getLine(info); 
-               line.open(format, bufSize); 
-           } catch (LineUnavailableException ex) { 
-               return; 
-           } 
+        DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
 
-           byte[] data = new byte[1024]; 
-           int numBytesRead = 0; 
-           line.start(); 
+        try {
+            line = (SourceDataLine) AudioSystem.getLine(info);
+            line.open(format, bufSize);
+        } catch (LineUnavailableException ex) {
+            return;
+        }
 
-           while (thread != null) { 
-              try{ 
-                 numBytesRead = playbackInputStream.read(data); 
-                 line.write(data, 0,numBytesRead); 
-              } catch (IOException e) {
-               } 
-           } 
+        byte[] data = new byte[1024];
+        int numBytesRead = 0;
+        line.start();
 
-           if (thread != null) { 
-               line.drain(); 
-           } 
+        while (thread != null) {
+            try {
+                numBytesRead = playbackInputStream.read(data);
+                line.write(data, 0, numBytesRead);
+            } catch (IOException e) {
+            }
+        }
 
-           line.stop(); 
-           line.close(); 
-           line = null; 
-       } 
+        if (thread != null) {
+            line.drain();
+        }
+
+        line.stop();
+        line.close();
+        line = null;
+    }
 }

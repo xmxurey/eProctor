@@ -1,8 +1,10 @@
 package eProctor;
+
 import com.sun.pdfview.PDFFile;
 
 import com.sun.pdfview.PDFPage;
 import com.sun.pdfview.PagePanel;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -14,10 +16,10 @@ import javax.swing.*;
  *
  * @author joshua.marinacci@sun.com
  */
-public class PDFDisplayManager{
+public class PDFDisplayManager {
 
-    public static PDFFile setup(String examHallID){
-        try{
+    public static PDFFile setup(String examHallID) {
+        try {
 //            set up the frame and panel
 //            JFrame frame = new JFrame("PDF Test");
 //            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -28,7 +30,7 @@ public class PDFDisplayManager{
 //            frame.setVisible(true);
 //
             //load a pdf from a byte buffer
-            File file = new File("Local/ExamQuestion/ExamHall="+examHallID+".pdf");
+            File file = new File("Local/ExamQuestion/ExamHall=" + examHallID + ".pdf");
             RandomAccessFile raf = new RandomAccessFile(file, "r");
             FileChannel channel = raf.getChannel();
             ByteBuffer buf = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
@@ -41,7 +43,7 @@ public class PDFDisplayManager{
 //            panel.showPage(page);
 
 
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;

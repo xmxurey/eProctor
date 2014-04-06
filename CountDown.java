@@ -1,8 +1,9 @@
- package eProctor;
+package eProctor;
+
 import javax.swing.*;
 
 //countdown timer
-class CountDown implements Runnable{
+class CountDown implements Runnable {
     long sec;
     long HH;
     long MM;
@@ -13,11 +14,11 @@ class CountDown implements Runnable{
     ImageIcon imageIcon = null;
     ImageIcon imageIcon1 = null;
 
-    public CountDown(long s, JLabel label, JButton button){
+    public CountDown(long s, JLabel label, JButton button) {
         this(s, label, button, null, null);
     }
 
-    public CountDown(long s, JLabel label, JButton button, ImageIcon imageIcon, ImageIcon imageIcon1){
+    public CountDown(long s, JLabel label, JButton button, ImageIcon imageIcon, ImageIcon imageIcon1) {
         this.sec = s;
         this.lblTimer = label;
         this.button = button;
@@ -25,17 +26,16 @@ class CountDown implements Runnable{
         this.imageIcon1 = imageIcon1;
     }
 
-    public void run(){
+    public void run() {
 
-        while(sec>=0){
+        while (sec >= 0) {
 
             SS = sec % 60;
-            MM = (sec/60) % 60;
-            HH = sec/3600;
-            try{
+            MM = (sec / 60) % 60;
+            HH = sec / 3600;
+            try {
                 Thread.sleep(1000);
-            }
-            catch (InterruptedException x) {
+            } catch (InterruptedException x) {
             }
             lblTimer.setText(HH + ":" + MM + ":" + SS);
             sec--;
@@ -46,10 +46,10 @@ class CountDown implements Runnable{
         lblTimer.setText("Times Up");
         timesUp = true;
 
-        if (timesUp == true){
-            button.setEnabled( (!button.isEnabled()) );
+        if (timesUp == true) {
+            button.setEnabled((!button.isEnabled()));
 
-            if (imageIcon != null){
+            if (imageIcon != null) {
                 button.setIcon(imageIcon);
                 button.setRolloverIcon(imageIcon1);
                 button.setPressedIcon(imageIcon1);

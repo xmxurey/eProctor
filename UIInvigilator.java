@@ -244,8 +244,6 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable {
                         int n = JOptionPane.showOptionDialog(null, "Confirm Exam Termination", "SYSTEM NOTICE", JOptionPane.YES_NO_OPTION,
                                 JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
                         if (n == JOptionPane.YES_OPTION) {
-                            audioThread[terminateID].stop();
-                            audio[terminateID].close();
                             //webcamThread[terminateID].stop();
                             //send to server to terminate userID from examHall
                             ExamHallManager.terminateStudent(client, studentArr[terminateID], examHall, reason);
@@ -362,6 +360,9 @@ public class UIInvigilator extends JFrame implements ActionListener, Runnable {
                             if (studentArr[j] == userID) {
                                 studentArr[j] = null;
                                 terminateList.remove(j);
+
+                                audioThread[j].stop();
+                                audio[j].close();
                                 break;
                             }
                         }

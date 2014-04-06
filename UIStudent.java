@@ -1,4 +1,5 @@
 package eProctor;
+
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 import com.sun.pdfview.PagePanel;
@@ -14,22 +15,22 @@ import javax.swing.*;
 
 //import UIInvigilator.CountDown;
 
-public class UIStudent extends JFrame implements ActionListener, Runnable{
+public class UIStudent extends JFrame implements ActionListener, Runnable {
 
-	private Socket client;
-	private User user;
-	private ExamHall examHall;
+    private Socket client;
+    private User user;
+    private ExamHall examHall;
 
 
-	//GUI
+    //GUI
     private JScrollPane scrollQuestionField, scrollAnswerField, downScrollPane;
-    private JPanel questionPlusPhotoPanel,answerPlusButtonPanel, photoPanel, buttonPanel,
+    private JPanel questionPlusPhotoPanel, answerPlusButtonPanel, photoPanel, buttonPanel,
             topPanel, downPanel, downPanelLeft, downPanelRight, p1;
     private JLabel lblMsg, lblTimer;
     private JTextField txtMsg;
     private JTextArea txtAnswer, eventLogArea;
 
-    private JButton btnSubmit,btnGetPaper,btnNextPage, btnPreviousPage;
+    private JButton btnSubmit, btnGetPaper, btnNextPage, btnPreviousPage;
     private int pageIndex = 1, pageCount;
     private PDFPage page;
     private PagePanel pagePanel = new PagePanel();
@@ -46,40 +47,42 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
     //List of Threads
     WebcamClient webcamClient;
     AudioClient audioClient;
-	//timer
-	Timer timer = new Timer();
+    //timer
+    Timer timer = new Timer();
     boolean timesUp = false;
-    long delay=0;
+    long delay = 0;
 
-	
-	public UIStudent(){		
-		
-	}
-	public UIStudent(User u, Socket c, ExamHall e){
-		//Start all socket connection
-		client = c;
-		user = u;	
-		examHall = e;
-		
-		Container container = getContentPane();
+    int sequenceNo = 0;
+
+    public UIStudent() {
+
+    }
+
+    public UIStudent(User u, Socket c, ExamHall e) {
+        //Start all socket connection
+        client = c;
+        user = u;
+        examHall = e;
+
+        Container container = getContentPane();
 
         layeredPane = new JLayeredPane();
-        layeredPane.setPreferredSize(new Dimension(d.width,(int)(d.height/1.05)));
+        layeredPane.setPreferredSize(new Dimension(d.width, (int) (d.height / 1.05)));
         lblBackground = new JLabel(background);
         lblBackground.setOpaque(true);
-        lblBackground.setBounds(0,0,d.width,(int)(d.height/1.05));
+        lblBackground.setBounds(0, 0, d.width, (int) (d.height / 1.05));
         layeredPane.add(lblBackground, new Integer(0));
 
 
-        topPanel = new JPanel(new GridLayout(2,1));
+        topPanel = new JPanel(new GridLayout(2, 1));
 //        pagePanel = new PagePanel();
         scrollQuestionField = new JScrollPane(pagePanel);
         scrollQuestionField.setOpaque(false);
 
-        
-      //camera
+
+        //camera
         photoPanel = new JPanel(new BorderLayout());
-        photoPanel.setSize(200,300);
+        photoPanel.setSize(200, 300);
         /*
         Camera camera = new Camera();
         Component comp;
@@ -105,27 +108,24 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         bagCons.gridy = 0;
         bagCons.gridwidth = 4;
         bagCons.fill = GridBagConstraints.BOTH;
-        questionPlusPhotoPanel.add(scrollQuestionField,bagCons);
+        questionPlusPhotoPanel.add(scrollQuestionField, bagCons);
 
         bagCons.gridx = 4;
         bagCons.gridwidth = 1;
-        questionPlusPhotoPanel.add(photoPanel,bagCons);
-
-
-        
+        questionPlusPhotoPanel.add(photoPanel, bagCons);
 
 
         //anwerPlusButtonPanel---------------------------------------
         answerPlusButtonPanel = new JPanel(new GridBagLayout());
         answerPlusButtonPanel.setOpaque(false);
         //divide the space into 4 colums
-        bagCons=new GridBagConstraints();
-        bagCons.weightx=1;
-        bagCons.weighty=1;
-        for(int i=0;i<10;i++)
+        bagCons = new GridBagConstraints();
+        bagCons.weightx = 1;
+        bagCons.weighty = 1;
+        for (int i = 0; i < 10; i++)
             answerPlusButtonPanel.add(new JPanel(), bagCons);
 
-        Color color=new Color(244,254,232,69);
+        Color color = new Color(244, 254, 232, 69);
         txtAnswer = new JTextArea("");
         txtAnswer.setEnabled(false);
 
@@ -151,15 +151,15 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
         GridBagConstraints btnBagCons = new GridBagConstraints();
         btnBagCons.gridwidth = GridBagConstraints.REMAINDER;
-        buttonPanel.add(btnGetPaper,btnBagCons);
+        buttonPanel.add(btnGetPaper, btnBagCons);
         btnBagCons.gridwidth = 1;
         btnBagCons.fill = GridBagConstraints.BOTH;
-        buttonPanel.add(btnPreviousPage,btnBagCons);
-        buttonPanel.add(btnNextPage,btnBagCons);
+        buttonPanel.add(btnPreviousPage, btnBagCons);
+        buttonPanel.add(btnNextPage, btnBagCons);
         buttonPanel.setOpaque(false);
         btnBagCons.gridwidth = GridBagConstraints.REMAINDER;
         //used to fill in space and divide the space into 10 column, let txtArea takes 9 and leave 1 for button panel
-        for(int i=0;i<10;i++)
+        for (int i = 0; i < 10; i++)
             buttonPanel.add(new JPanel(), btnBagCons);
         bagCons.gridx = 9;
         bagCons.gridwidth = 1;
@@ -167,8 +167,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
         answerPlusButtonPanel.setOpaque(false);
 
-        topPanel.add(questionPlusPhotoPanel,BorderLayout.CENTER);
-        topPanel.add(answerPlusButtonPanel,BorderLayout.SOUTH);
+        topPanel.add(questionPlusPhotoPanel, BorderLayout.CENTER);
+        topPanel.add(answerPlusButtonPanel, BorderLayout.SOUTH);
 
         //button listeners
         btnGetPaper.addActionListener(this);
@@ -187,14 +187,14 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         eventLogArea.setForeground(Color.BLACK);
 
         downScrollPane = new JScrollPane(eventLogArea);
-        downScrollPane.setPreferredSize(new Dimension(10,60));
+        downScrollPane.setPreferredSize(new Dimension(10, 60));
 
         lblMsg = new JLabel("Enter Message");
         txtMsg = new JTextField();
         txtMsg.addActionListener(this);
         txtMsg.setOpaque(false);
         p1 = new JPanel(new BorderLayout());
-        p1.add(lblMsg,BorderLayout.WEST);
+        p1.add(lblMsg, BorderLayout.WEST);
         p1.add(txtMsg, BorderLayout.CENTER);
         p1.setOpaque(false);
 
@@ -206,7 +206,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
         downPanelRight.setLayout(new GridLayout(2, 1));
         lblTimer = new JLabel("--:--:--");
         lblTimer.setFont(new Font("Serif", Font.BOLD, 20));
-    	lblTimer.setForeground(Color.white);
+        lblTimer.setForeground(Color.white);
         downPanelRight.add(lblTimer);
         btnSubmit = new JButton(submitButton);
         btnSubmit.addActionListener(this);
@@ -232,114 +232,107 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
         container.add(layeredPane);
 
-		Thread t = new Thread(this);
+        Thread t = new Thread(this);
         t.start();
-        
+
     }
-	
-	public void actionPerformed(ActionEvent e){
-		DataInputStream in;
-		DataOutputStream out;
-        if (e.getSource() == btnGetPaper){
+
+    public void actionPerformed(ActionEvent e) {
+        DataInputStream in;
+        DataOutputStream out;
+        if (e.getSource() == btnGetPaper) {
             page = pdffile.getPage(1);
             pagePanel.showPage(page);
-        }
-        else if (e.getSource() == btnNextPage){
-            if(pageIndex == pageCount-1){
-            	JOptionPane.showMessageDialog(null, "It is already the last page!");
-            }
-            else{ pageIndex++;
+        } else if (e.getSource() == btnNextPage) {
+            if (pageIndex == pageCount - 1) {
+                JOptionPane.showMessageDialog(null, "It is already the last page!");
+            } else {
+                pageIndex++;
                 page = pdffile.getPage(pageIndex);
                 pagePanel.showPage(page);
 
             }
-        }
-        else if (e.getSource() == btnPreviousPage){
-            if(pageIndex == 1){
-            	JOptionPane.showMessageDialog(null, "It is already the first page!");
-            }
-            else{
+        } else if (e.getSource() == btnPreviousPage) {
+            if (pageIndex == 1) {
+                JOptionPane.showMessageDialog(null, "It is already the first page!");
+            } else {
                 pageIndex--;
                 page = pdffile.getPage(pageIndex);
                 pagePanel.showPage(page);
             }
-        }
-        else if(e.getSource() == btnSubmit){
-        	if (JOptionPane.showConfirmDialog(null, "Are you sure to submit your answer script"
-        			+ " and end the exam ?", "Request", 
-        		    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)
-        		    == JOptionPane.YES_OPTION){
-        		 //Do the request
-        		try{
-        			String fileToSend = "Local/ExamAnswer/ExamHall=" + examHall.getExamHallID() +"_UserID="+ user.getUserID() +".txt";
-        			
-        			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter(fileToSend, false)));
-        			System.out.println("text="+txtAnswer.getText());
-        			writer.println(txtAnswer.getText());
+        } else if (e.getSource() == btnSubmit) {
+            if (JOptionPane.showConfirmDialog(null, "Are you sure to submit your answer script"
+                            + " and end the exam ?", "Request",
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE
+            )
+                    == JOptionPane.YES_OPTION) {
+                //Do the request
+                try {
+                    String fileToSend = "Local/ExamAnswer/ExamHall=" + examHall.getExamHallID() + "_UserID=" + user.getUserID() + ".txt";
+
+                    PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileToSend, false)));
+                    System.out.println("text=" + txtAnswer.getText());
+                    writer.println(txtAnswer.getText());
 
                     ExamHallManager.studentFinishExam(client, examHall, user);
-        			
-    				writer.close();
-        			
-        		}
-        		catch(Exception ex){
-        			ex.printStackTrace();
-        		}
-        	}
-        	else{
-        		 //Go back to normal
-        	}
-        	
-			
+
+                    writer.close();
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                //Go back to normal
+            }
+
+
         }
 
-        try{
-			in = new DataInputStream(client.getInputStream());
-			out = new DataOutputStream(client.getOutputStream());
-			if (e.getSource() == txtMsg){
-				//send code to server informing a msg is send + its msg text
-				out.writeInt(Protocol.MSG);
-				out.writeUTF(txtMsg.getText());
-				txtMsg.setText("");
-			}
-		}
-		catch (IOException ex){
-			System.out.println("IO Exception");
-		}
-	}
-	
-	public void run() {
-		try {
+        try {
+            in = new DataInputStream(client.getInputStream());
+            out = new DataOutputStream(client.getOutputStream());
+            if (e.getSource() == txtMsg) {
+                //send code to server informing a msg is send + its msg text
+                out.writeInt(Protocol.MSG);
+                out.writeUTF(txtMsg.getText());
+                txtMsg.setText("");
+            }
+        } catch (IOException ex) {
+            System.out.println("IO Exception");
+        }
+    }
+
+    public void run() {
+        try {
             DataInputStream in = new DataInputStream(client.getInputStream());
             Thread time = null;
 
             System.out.println("New Session Started");
-            int code=0;
+            int code = 0;
 
-        	int joinNo=0;
+            int joinNo = 0;
             while (true) {
                 try {
                     code = in.readInt();
-                    System.out.println("code="+code);
-                    if(code == Protocol.CONNECT){
-                    	synchronized(this){
-                			joinNo = ExamHallManager.checkJoinNo(client);
-                			System.out.println("JoinNo="+ joinNo);
-                		}
-                		webcamClient = new WebcamClient(joinNo);
-                		webcamClient.start();
-                		audioClient = new AudioClient(Protocol.audioPort[joinNo]);
-                    }
-                    else if(code == Protocol.RECEIVEQUESTION){
-                		//get pdfQuestion
+                    System.out.println("code=" + code);
+                    if (code == Protocol.CONNECT) {
+                        synchronized (this) {
+                            joinNo = ExamHallManager.checkJoinNo(client);
+                            System.out.println("JoinNo=" + joinNo);
+                            sequenceNo = joinNo;
+                        }
+                        webcamClient = new WebcamClient(joinNo);
+                        webcamClient.start();
+                        audioClient = new AudioClient(Protocol.audioPort[joinNo]);
+                    } else if (code == Protocol.RECEIVEQUESTION) {
+                        //get pdfQuestion
                         ExamHallManager.receiveQuestion(client, examHall);
                         //display pdf page
                         pdffile = PDFDisplayManager.setup(examHall.getExamHallID());
                         pageCount = pdffile.getNumPages();
-                    }
-                    else if(code == Protocol.MSG){
-                		//display msg from eventlog
-                		String msg=in.readUTF();
+                    } else if (code == Protocol.MSG) {
+                        //display msg from eventlog
+                        String msg = in.readUTF();
 
                         //for testing only
                         if (msg == null)
@@ -349,102 +342,95 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
                         eventLogArea.setText(msg);
                         eventLogArea.selectAll();
-                	}
-                	else if(code == Protocol.START){
-                		//Enable answer panel and submit button
-                		btnSubmit.setEnabled(true);
-                		txtAnswer.setEnabled(true);
-                		btnGetPaper.setEnabled(true);
-                		btnNextPage.setEnabled(true);
-                		btnPreviousPage.setEnabled(true);
-                		
-                		//start timer
-                		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
-                		delay = delay/1000;
-                		time = new Thread(new CountDown(delay,lblTimer,btnSubmit));
-                		time.start();
+                    } else if (code == Protocol.START) {
+                        //Enable answer panel and submit button
+                        btnSubmit.setEnabled(true);
+                        txtAnswer.setEnabled(true);
+                        btnGetPaper.setEnabled(true);
+                        btnNextPage.setEnabled(true);
+                        btnPreviousPage.setEnabled(true);
 
-                		//Create answer file
-				        File examAnswer = new File("Local/ExamAnswer/ExamHall=" + examHall.getExamHallID()+"_UserID="+user.getUserID()+".txt");
-				        boolean fileCreated = false;
-				        examAnswer.createNewFile();
-				        
-				        //display start message
-				        JOptionPane.showMessageDialog(null,
-                			    "Exam has started");
-                	}
-                	else if(code == Protocol.ALLSENDANSWER){
-                		sendAnswer();
-                	}
-                	else if(code == Protocol.STUDENTSENDANSWER){
+                        //start timer
+                        delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
+                        delay = delay / 1000;
+                        time = new Thread(new CountDown(delay, lblTimer, btnSubmit));
+                        time.start();
 
-                		sendAnswer();
-                		endInvigilatorclient();
-                	}
-                	else if(code == Protocol.FINISHTIMER){
-                		if(time != null){
-                			time.stop();
-                			btnSubmit.setEnabled(false);
-                		}
-                	}
-                	else if(code==Protocol.TERMINATESERVER){
-                		//display end message
-				        JOptionPane.showMessageDialog(null,
-                			    "Exam has Ended");
-				        
-				        endInvigilatorclient();
-                	}
+                        //Create answer file
+                        File examAnswer = new File("Local/ExamAnswer/ExamHall=" + examHall.getExamHallID() + "_UserID=" + user.getUserID() + ".txt");
+                        boolean fileCreated = false;
+                        examAnswer.createNewFile();
+
+                        //display start message
+                        JOptionPane.showMessageDialog(null,
+                                "Exam has started");
+                    } else if (code == Protocol.ALLSENDANSWER) {
+                        sendAnswer();
+                    } else if (code == Protocol.STUDENTSENDANSWER) {
+
+                        sendAnswer();
+                        endInvigilatorclient();
+                    } else if (code == Protocol.FINISHTIMER) {
+                        if (time != null) {
+                            time.stop();
+                            btnSubmit.setEnabled(false);
+                        }
+                    } else if (code == Protocol.TERMINATESERVER) {
+                        //display end message
+                        JOptionPane.showMessageDialog(null,
+                                "Exam has Ended");
+
+                        endInvigilatorclient();
+                    }
                 } catch (IOException e) {
                     System.out.println(" Exception reading Streams: " + e);
                     break;
                 }
 
             }
-        } 
-		catch (IOException e) {
-	        System.out.println("IO Exception: " + e);
-	        e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("IO Exception: " + e);
+            e.printStackTrace();
         }
     }
-	
-	public void endInvigilatorclient(){
-		//end webcam
-		webcamClient.stop();
-		//end audio
-		audioClient.audioStop();
-	}
-	
-	public void sendAnswer(){
-		try{
-			String fileToSend = "Local/ExamAnswer/ExamHall=" + examHall.getExamHallID() +"_UserID="+ user.getUserID() +".txt";
-			
-			PrintWriter writer= new PrintWriter(new BufferedWriter(new FileWriter(fileToSend, false)));
-			writer.println(txtAnswer.getText());
 
-			writer.close();
+    public void endInvigilatorclient() {
+        //end webcam
+        webcamClient.stop();
+        //end audio
+        audioClient.audioStop();
+    }
+
+    public void sendAnswer() {
+        try {
+            String fileToSend = "Local/ExamAnswer/ExamHall=" + examHall.getExamHallID() + "_UserID=" + user.getUserID() + ".txt";
+
+            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileToSend, false)));
+            writer.println(txtAnswer.getText());
+
+            writer.close();
 
             ExamHallManager.sendAnswer(client, fileToSend);
 
-		}
-		catch(Exception ex){
-			ex.printStackTrace();
-		}
-		
-	}
-	
-	public void receiveQuestion(){
-        ExamHallManager.receiveQuestion(client, examHall);
-	}
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
-	public static void main(String[] args){
-    	UIStudent uiStudent = new UIStudent();
+    }
+
+    public void receiveQuestion() {
+        ExamHallManager.receiveQuestion(client, examHall);
+    }
+
+    public static void main(String[] args) {
+        UIStudent uiStudent = new UIStudent();
 //    	uiStudent.setBounds(0, 0, 800, 600);
 //    	uiStudent.setVisible(true);
 //    	uiStudent.setResizable(false);
 //    	uiStudent.setTitle("Student Exam");
-    } 
-	
-	//countdown timer
+    }
+
+    //countdown timer
 //	class CountDown implements Runnable{
 //		long sec;
 //		long HH;

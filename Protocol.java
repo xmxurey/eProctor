@@ -1,4 +1,5 @@
 package eProctor;
+
 public class Protocol {
 
 
@@ -16,8 +17,8 @@ public class Protocol {
     public static final int ALLSENDVIDEO = 11;
     public static final int ALLSENDANSWER = 12;
     public static final int TERMINATESERVER = 13;
-   
-    
+
+
     //server IP
     public static final String serverAddr = "172.22.64.239";    // server host name //bryant
     public static final int serverPortNo = 2001;
@@ -36,7 +37,7 @@ public class Protocol {
     public static final int answerTransferPort = 3500;
     public static final String questionTransferAddr = "172.22.64.239";//bryant
     public static final int questionTransferPort = 3600;
-	
+
     /*
     //server IP
     public static final String serverAddr = "127.0.0.1";    // server host name
@@ -57,5 +58,5 @@ public class Protocol {
     public static final String questionTransferAddr = "127.0.0.1";
     public static final int questionTransferPort = 3600;
     */
-	
+
 }
