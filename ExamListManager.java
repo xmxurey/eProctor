@@ -14,12 +14,8 @@ import java.net.*;
 
 public class ExamListManager {
 
-	public ExamListManager(){
-		
-	}
-	
 	//display list of exams student sign up/has to sign up
-	public JPanel displayExamList(User user){
+	public static JPanel displayExamList(User user){
 		//create panel
         JPanel panel = new JPanel(new GridBagLayout());
 		GridBagConstraints b = new GridBagConstraints();
@@ -225,7 +221,7 @@ public class ExamListManager {
 	}
 	
 	//Needed for enter exam of UIMenu
-	public JPanel displayLatestExam(User user){
+	public static JPanel displayLatestExam(User user){
 		JPanel panel = new JPanel(new GridLayout(5, 1));
 		//connect to mySQL
 		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
@@ -346,7 +342,7 @@ public class ExamListManager {
 	}
 	
 	//return list of examslots and related examhalls
-	public ArrayList getExamSlotList(String moduleCode){
+	public static ArrayList getExamSlotList(String moduleCode){
 		ArrayList examSlotList = new ArrayList();
 
 		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
@@ -398,7 +394,7 @@ public class ExamListManager {
 	}
 	
 	//Add/Edit examslot
-	public boolean addEditExamSlot(User user, String m, int ex){
+	public static boolean addEditExamSlot(User user, String m, int ex){
 		//check if function is add/edit. Edit = student has been allocated examhall
 		boolean success=false;
 		int function = 0;
@@ -518,7 +514,7 @@ public class ExamListManager {
 	}
 	
 	
-	public boolean deleteExamSlot(User user,String m){
+	public static boolean deleteExamSlot(User user,String m){
 
 		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";

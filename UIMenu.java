@@ -29,10 +29,7 @@ public class UIMenu extends JFrame implements ActionListener {
 	private User user;
 	private Socket client;
 	
-	//manager list
-	private ExamListManager examListMgr = new ExamListManager();
-	private ExamHallManager examHallMgr = new ExamHallManager();
-	
+
 	public UIMenu(){
 		
 	}
@@ -179,7 +176,7 @@ public class UIMenu extends JFrame implements ActionListener {
 		UIManager.put("TabbedPane.contentOpaque", Boolean.FALSE);
 		
 		//Create pCenter
-		pCenter = examListMgr.displayExamList(user);
+		pCenter = ExamListManager.displayExamList(user);
 		pCenter.setBounds(0, 81, 800, 519);
 		pCenter.setOpaque(false);
 		layeredPane.add(pCenter, new Integer(2));
@@ -247,7 +244,7 @@ public class UIMenu extends JFrame implements ActionListener {
 		pNLeft.setOpaque(false);
 		pNorth.setOpaque(false);
 				
-		pNRight = examListMgr.displayLatestExam(user);
+		pNRight = ExamListManager.displayLatestExam(user);
 		pNorth.add(pNLeft, BorderLayout.WEST);
 		pNorth.add(pNRight, BorderLayout.CENTER);
 
@@ -298,7 +295,7 @@ public class UIMenu extends JFrame implements ActionListener {
 			if(btnFunction.getText() == "Delete"){
 				ExamHall examHall = new ExamHall();
 				boolean success = false;
-				success = examListMgr.deleteExamSlot(user, btnFunction.getModuleCode());
+				success = ExamListManager.deleteExamSlot(user, btnFunction.getModuleCode());
 				
 				if(success){
 					System.out.println("Update/Add Success");
@@ -370,7 +367,7 @@ public class UIMenu extends JFrame implements ActionListener {
 				}
 				if (enterAllow){
 					//check if user can enter exam
-					examHall = examHallMgr.enterExamHall(user, lblText.getText());
+					examHall = ExamHallManager.enterExamHall(user, lblText.getText());
 					if(examHall == null){
 						lblMsg.setText("Access Denied");
 						lblMsg.setForeground(Color.red);
@@ -378,7 +375,7 @@ public class UIMenu extends JFrame implements ActionListener {
 					else{
 						//times up. access allowed
 						//connect to server
-						client = examHallMgr.connectExamHall(examHall, user);
+						client = ExamHallManager.connectExamHall(examHall, user);
 						
 						if(client == null){
 							JOptionPane.showMessageDialog(null,
