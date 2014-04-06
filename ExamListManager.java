@@ -14,7 +14,6 @@ import java.net.*;
 
 public class ExamListManager {
 
-    //testing testing
 	//display list of exams student sign up/has to sign up
 	public static JPanel displayExamList(User user){
 		//create panel
