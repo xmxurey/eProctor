@@ -527,6 +527,7 @@ public class Server extends Thread{
 			}
 			catch(Exception ex){
 				System.out.println("Exception: "+ex.toString());
+                ex.printStackTrace();
 			}
 		}
 		/*
