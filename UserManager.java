@@ -10,12 +10,7 @@ import java.awt.*;
 
 public class UserManager {
 
-	public UserManager(){
-		
-	}
-	//login
-	
-	public User authenticate(String userName, String pass){ 
+	public static User authenticate(String userName, String pass){
 		//check if authenticate
 		String url = "jdbc:mysql://"+Protocol.serverAddr+":3306/";
         String dbName = "cz2006?";

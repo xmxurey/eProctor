@@ -14,7 +14,6 @@ public class UILogin extends JFrame implements ActionListener{
 	private JTextField txtUserID, txtPassword;
 	private JLabel lblUser, lblPass, lblMsg, lblBackground;
 	private JPanel pCenter;
-	private UserManager userMgr = new UserManager();
 	private JLayeredPane layeredPane;
 	private ImageIcon background = new ImageIcon("Images/loginbg.jpg");
 	private ImageIcon loginButton = new ImageIcon("Images/login1.png");
@@ -83,7 +82,7 @@ public class UILogin extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e){
 		if(e.getSource() == btnLogin){
 			
-			User user = userMgr.authenticate(txtUserID.getText().trim(), txtPassword.getText().trim());
+			User user = UserManager.authenticate(txtUserID.getText().trim(), txtPassword.getText().trim());
 			
 			
 			if(user == null){
