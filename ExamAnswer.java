@@ -11,7 +11,7 @@ public class ExamAnswer {
 		content = c;
 		moduleAttendance = ma;
 	}
-
+//
 	//get and set methods
 	public void setAnswerID(int a){
 		this.answerID = a;
