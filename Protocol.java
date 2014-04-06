@@ -21,7 +21,7 @@ public class Protocol {
     //server IP
     public static final String serverAddr = "172.22.64.239";    // server host name //bryant
     public static final int serverPortNo = 2001;
-    public static final String invigilatorAddr = "172.22.105.16"; //meng xing
+    public static final String invigilatorAddr = "172.27.121.36"; //meng xing
     public static final int InvigilatorPortNo = 2050;
 
     public static final String webcamAddr = invigilatorAddr;

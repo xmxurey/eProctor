@@ -3,8 +3,6 @@ import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 import com.sun.pdfview.PagePanel;
 
-import eProctor.UIInvigilator.CountDown;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.net.Socket;
@@ -21,7 +19,6 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 	private Socket client;
 	private User user;
 	private ExamHall examHall;
-	
 
 
 	//GUI
@@ -85,12 +82,12 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
       //camera
         photoPanel = new JPanel(new BorderLayout());
         photoPanel.setSize(200,300);
-        
+        /*
         Camera camera = new Camera();
         Component comp;
         comp = camera.Return();
         photoPanel.add(comp);
-		
+		*/
         //questionPlusPhotoPanel-----------------------------------------------------
         questionPlusPhotoPanel = new JPanel(new GridBagLayout());
         questionPlusPhotoPanel.setOpaque(false);
@@ -320,7 +317,8 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
 
             System.out.println("New Session Started");
             int code=0;
-            int joinNo=0;
+
+        	int joinNo=0;
             while (true) {
                 try {
                     code = in.readInt();
@@ -365,7 +363,7 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
-                		time = new Thread(new CountDown(delay));
+                		time = new Thread(new CountDown(delay,lblTimer,btnSubmit));
                 		time.start();
 
                 		//Create answer file
@@ -449,38 +447,38 @@ public class UIStudent extends JFrame implements ActionListener, Runnable{
     } 
 	
 	//countdown timer
-	class CountDown implements Runnable{
-		long sec;
-		long HH;
-		long MM;
-		long SS;
-		boolean stop=false;
-		
-		public CountDown(long s){
-			sec = s;
-			
-		}
-		public void run(){
-			while(sec>=0){
-
-				SS = sec % 60;
-				MM = (sec/60) % 60;
-				HH = sec/3600;
-				try{
-					Thread.sleep(1000);
-				}
-				catch (InterruptedException x) {
-                }
-				lblTimer.setText(HH + ":" + MM + ":" + SS);
-				sec--;
-				
-			}
-			lblTimer.setText("--:--:--");
-			timesUp = true;
-			
-			if(timesUp==true){
-				btnSubmit.setEnabled(false);
-        	}
-		}
-	}
+//	class CountDown implements Runnable{
+//		long sec;
+//		long HH;
+//		long MM;
+//		long SS;
+//		boolean stop=false;
+//
+//		public CountDown(long s){
+//			sec = s;
+//
+//		}
+//		public void run(){
+//			while(sec>=0){
+//
+//				SS = sec % 60;
+//				MM = (sec/60) % 60;
+//				HH = sec/3600;
+//				try{
+//					Thread.sleep(1000);
+//				}
+//				catch (InterruptedException x) {
+//                }
+//				lblTimer.setText(HH + ":" + MM + ":" + SS);
+//				sec--;
+//
+//			}
+//			lblTimer.setText("--:--:--");
+//			timesUp = true;
+//
+//			if(timesUp==true){
+//				btnSubmit.setEnabled(false);
+//        	}
+//		}
+//	}
 }

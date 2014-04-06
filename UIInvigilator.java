@@ -302,7 +302,7 @@ Container container = getContentPane();
                 		//start timer
                 		delay = examHall.getExamSlot().getEndTime().getTime() - examHall.getExamSlot().getStartTime().getTime();
                 		delay = delay/1000;
-                		time = new Thread(new CountDown(delay));
+                		time = new Thread(new CountDown(delay,lblTimer,btnStartStop,finishButton,new ImageIcon("Images/endexam3.png")));
                 		time.start();
                 		
                 		//get exam paper
@@ -402,41 +402,41 @@ Container container = getContentPane();
     }
 	
 	//countdown timer
-	class CountDown implements Runnable{
-		long sec;
-		long HH;
-		long MM;
-		long SS;
-		boolean stop=false;
-		
-		public CountDown(long s){
-			sec = s;
-			
-		}
-		public void run(){
-			while(sec>=0){
-
-				SS = sec % 60;
-				MM = (sec/60) % 60;
-				HH = sec/3600;
-				try{
-					Thread.sleep(1000);
-				}
-				catch (InterruptedException x) {
-                }
-				lblTimer.setText(HH + ":" + MM + ":" + SS);
-				sec--;
-				
-			}
-			lblTimer.setText("--:--:--");
-			timesUp = true;
-			
-			if(timesUp==true){
-				btnStartStop.setIcon(finishButton);
-		        btnStartStop.setRolloverIcon(new ImageIcon("Images/endexam3.png"));
-		        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
-        		btnStartStop.setEnabled(true);
-        	}
-		}
-	}
+//	class CountDown implements Runnable{
+//		long sec;
+//		long HH;
+//		long MM;
+//		long SS;
+//		boolean stop=false;
+//
+//		public CountDown(long s){
+//			sec = s;
+//
+//		}
+//		public void run(){
+//			while(sec>=0){
+//
+//				SS = sec % 60;
+//				MM = (sec/60) % 60;
+//				HH = sec/3600;
+//				try{
+//					Thread.sleep(1000);
+//				}
+//				catch (InterruptedException x) {
+//                }
+//				lblTimer.setText(HH + ":" + MM + ":" + SS);
+//				sec--;
+//
+//			}
+//			lblTimer.setText("--:--:--");
+//			timesUp = true;
+//
+//			if(timesUp==true){
+//				btnStartStop.setIcon(finishButton);
+//		        btnStartStop.setRolloverIcon(new ImageIcon("Images/endexam3.png"));
+//		        btnStartStop.setPressedIcon(new ImageIcon("Images/endexam3.png"));
+//        		btnStartStop.setEnabled(true);
+//        	}
+//		}
+//	}
 }
