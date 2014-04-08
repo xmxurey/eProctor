@@ -83,12 +83,12 @@ public class UIStudent extends JFrame implements ActionListener, Runnable {
         //camera
         photoPanel = new JPanel(new BorderLayout());
         photoPanel.setSize(200, 300);
-        /*
+        
         Camera camera = new Camera();
         Component comp;
         comp = camera.Return();
         photoPanel.add(comp);
-		*/
+		
         //questionPlusPhotoPanel-----------------------------------------------------
         questionPlusPhotoPanel = new JPanel(new GridBagLayout());
         questionPlusPhotoPanel.setOpaque(false);

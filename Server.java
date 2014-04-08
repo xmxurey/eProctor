@@ -192,7 +192,7 @@ public class Server extends Thread {
         BufferedOutputStream bos;
         byte[] data;
         try {
-            ServerSocket ss = new ServerSocket(Protocol.answerTransferPort, 6);
+            ServerSocket ss = new ServerSocket(Protocol.answerTransferPort, 1);
             Socket socket = ss.accept();
 
             FileOutputStream fos = new FileOutputStream("eProctorServer/ExamAnswerSheet/ExamHall=" + eID + "_UserID=" + uID + ".txt");
@@ -290,8 +290,7 @@ public class Server extends Thread {
         private String examHallID;
         private int userID = 0;
         private boolean isStudent = true;
-        DataOutputStream out;
-        DataInputStream in;
+
         //check if user can enter examhall
         String url = "jdbc:mysql://" + Protocol.serverAddr + ":3306/";
         String dbName = "cz2006?";
@@ -317,8 +316,8 @@ public class Server extends Thread {
 
         public void run() {
             try {
-                in = new DataInputStream(client.getInputStream());
-                out = new DataOutputStream(client.getOutputStream());
+                DataInputStream in = new DataInputStream(client.getInputStream());
+                DataOutputStream out = new DataOutputStream(client.getOutputStream());
 
                 Class.forName(driver);
                 Connection conn = DriverManager.getConnection(url + dbName + username + password);
@@ -621,7 +620,7 @@ public class Server extends Thread {
             BufferedOutputStream bos;
             byte[] data;
             try {
-                ServerSocket ss = new ServerSocket(Protocol.videoTransferPort, 6);
+                ServerSocket ss = new ServerSocket(Protocol.videoTransferPort, 1);
                 Socket socket = ss.accept();
 
                 FileOutputStream fos = new FileOutputStream("eProctorServer/ExamRecording/ExamHall=" + examHallID + ".mov");
