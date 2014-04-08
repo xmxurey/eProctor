@@ -84,6 +84,8 @@ public class UILogin extends JFrame implements ActionListener {
         if (e.getSource() == btnLogin) {
 
             User user = UserManager.authenticate(txtUserID.getText().trim(), txtPassword.getText().trim());
+
+
             if (user == null) {
                 lblMsg.setText("Incorrect username/password");
             } else if (user instanceof Invigilator) {
@@ -92,8 +94,6 @@ public class UILogin extends JFrame implements ActionListener {
                 uimenu.setSize(800, 600);
                 uimenu.setVisible(true);
                 uimenu.setResizable(false);
-                Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-                uimenu.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
                 uimenu.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 this.dispose();
             } else if (user instanceof Student) {
@@ -102,8 +102,6 @@ public class UILogin extends JFrame implements ActionListener {
                 uimenu.setSize(800, 600);
                 uimenu.setVisible(true);
                 uimenu.setResizable(false);
-                Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-                uimenu.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
                 uimenu.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 this.dispose();
             }
@@ -117,9 +115,6 @@ public class UILogin extends JFrame implements ActionListener {
         uiLogin.setSize(800, 600);
         uiLogin.setVisible(true);
         uiLogin.setResizable(false);
-        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        uiLogin.setLocation(dim.width/2-uiLogin.getSize().width/2, dim.height/2-uiLogin.getSize().height/2);
-        uiLogin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     }
 }
