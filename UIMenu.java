@@ -309,6 +309,8 @@ public class UIMenu extends JFrame implements ActionListener {
                 uiExamSlot.setSize(450, 200);
                 uiExamSlot.setVisible(true);
                 uiExamSlot.setResizable(false);
+                Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+                uiExamSlot.setLocation(dim.width/2-uiExamSlot.getSize().width/2, dim.height/2-uiExamSlot.getSize().height/2);
             }
         } else if (e.getSource() == btnLogout) {
             user = null;
@@ -317,7 +319,9 @@ public class UIMenu extends JFrame implements ActionListener {
             uiLogin.setSize(800, 600);
             uiLogin.setVisible(true);
             uiLogin.setResizable(false);
-
+            uiLogin.setResizable(false);
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+            uiLogin.setLocation(dim.width/2-uiLogin.getSize().width/2, dim.height/2-uiLogin.getSize().height/2);
             //close window
             this.dispose();
         } else if (e.getSource() == btnRefresh) {
@@ -326,6 +330,8 @@ public class UIMenu extends JFrame implements ActionListener {
             uimenu.setSize(800, 600);
             uimenu.setVisible(true);
             uimenu.setResizable(false);
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+            uimenu.setLocation(dim.width/2-uimenu.getSize().width/2, dim.height/2-uimenu.getSize().height/2);
             uimenu.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             this.dispose();
 
